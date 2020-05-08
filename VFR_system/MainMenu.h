@@ -17,6 +17,7 @@
 #define  NINE_WINDOWS   3
 
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
+#define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
 
 class MainMenu : public QWidget
 {
@@ -29,14 +30,22 @@ public:
 	void DealOpenVzbox();
 	void DealCloseVzbox();
 	void RefreshCameraList();
+
 	void RefreshVideoDisplayWindow();
+	void RefreshVideoDisplayStyle();
 	void CleanAllDisplayWindows();
 	void OneWindowsDisplay();
 	void FourWindowsDisplay();
 	void NineWindowsDisplay();
+	void ShowOneChnVideo(int chnId);
+	void ChangeOneVideoStyle(int chnId);
 	//void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VZ_LPRC_IMAGE_INFO *pFrame);
 
 	void resizeEvent(QResizeEvent *event);
+
+public slots:
+	void DealSingleClickedVideoLabel(int chn);
+	void DealDoubleClickedVideoLabel(int chn);
 
 public:
 	Ui::MainMenu ui;
@@ -53,9 +62,9 @@ public:
 	QString vzbox_password_;        //盒子密码
 	bool    vzbox_online_status;    //盒子是否在线
 
-	int     display_video_windows_num_;  //显示视频窗口的个数
-	QLabel  *video_display_label;        //初始化
-	QVector<QString> camera_list_buff;   //相机列表，通过IP来记录         
+	int     display_video_windows_num_;        //显示视频窗口的个数
+	DisplayVideoLabel  *video_display_label;   //初始化
+	QVector<QString> camera_list_buff;         //相机列表，通过IP来记录         
 
 };
 

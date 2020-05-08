@@ -46,4 +46,5 @@ void VFR_system::DealLoginTask()
 
 	main_menu_Handle_->show();
 	this->hide();
+	main_menu_Handle_->RefreshVideoDisplayWindow();
 }

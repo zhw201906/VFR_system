@@ -114,8 +114,12 @@ MainMenu::MainMenu(QWidget *parent)
 	display_video_windows_num_ = FOUR_WINDOWS;
 	video_display_label = NULL;
 
+	ui.toolButton_oneWindow->setEnabled(true);
+	ui.toolButton_fourWindows->setEnabled(false);
+	ui.toolButton_nineWindows->setEnabled(true);
+
 	//初始化显示视频窗口label
-	video_display_label = new QLabel[CAMERA_NUM_LIMIT];
+	video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
 	if (video_display_label == NULL)
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("视频显示控件初始化失败！"));
@@ -123,7 +127,11 @@ MainMenu::MainMenu(QWidget *parent)
 	}
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
+		video_display_label[i].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 		video_display_label[i].setParent(ui.widget_video_window);
+		video_display_label[i].setChannelId(i);
+		connect(&video_display_label[i], &DisplayVideoLabel::singleClickedMouse, this, &MainMenu::DealSingleClickedVideoLabel);
+		connect(&video_display_label[i], &DisplayVideoLabel::doubleClickedMouse, this, &MainMenu::DealDoubleClickedVideoLabel);
 	}
 
 	//打开设备按钮
@@ -139,19 +147,27 @@ MainMenu::MainMenu(QWidget *parent)
 		display_video_windows_num_ = ONE_WINDOWS;
 		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
+		ui.toolButton_oneWindow->setEnabled(false);
+		ui.toolButton_fourWindows->setEnabled(true);
+		ui.toolButton_nineWindows->setEnabled(true);
 	});
 	connect(ui.toolButton_fourWindows, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = FOUR_WINDOWS;
 		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
+		ui.toolButton_oneWindow->setEnabled(true);
+		ui.toolButton_fourWindows->setEnabled(false);
+		ui.toolButton_nineWindows->setEnabled(true);
 	});
 	connect(ui.toolButton_nineWindows, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = NINE_WINDOWS;
 		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
+		ui.toolButton_oneWindow->setEnabled(true);
+		ui.toolButton_fourWindows->setEnabled(true);
+		ui.toolButton_nineWindows->setEnabled(false);
 	});
 
-	qDebug() << "class finished";
 }
 
 MainMenu::~MainMenu()
@@ -227,6 +243,7 @@ void MainMenu::DealOpenVzbox()
 	ui.lineEdit_userName->setEnabled(false);
 
 	RefreshCameraList();
+	RefreshVideoDisplayWindow();
 }
 
 //关闭设备
@@ -284,51 +301,55 @@ void MainMenu::RefreshCameraList()
 	ui.listWidget_CameraList->addItem("ip    status");
 }
 
+//刷新视频显示窗口（显示样式）
 void MainMenu::RefreshVideoDisplayWindow()
 {
 	CleanAllDisplayWindows();
 	switch (display_video_windows_num_)
 	{
-	case ONE_WINDOWS:  OneWindowsDisplay();  break;
-	case FOUR_WINDOWS: FourWindowsDisplay(); break;
-	case NINE_WINDOWS: NineWindowsDisplay(); break;
+		case ONE_WINDOWS:  OneWindowsDisplay();  break;
+		case FOUR_WINDOWS: FourWindowsDisplay(); break;
+		case NINE_WINDOWS: NineWindowsDisplay(); break;
 	}
 }
 
+//刷新视频显示窗口样式（单击触发）
+void MainMenu::RefreshVideoDisplayStyle()
+{
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		video_display_label[i].setStyleSheet(DISPLAY_LABEL_STYLE);
+	}
+}
+
+//清除所有视频显示
 void MainMenu::CleanAllDisplayWindows()
 {
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
 		video_display_label[i].hide();
 	}
-	qDebug() << "frame width:"
-		<< ui.widget_video_window->width() << "height:"
-		<< ui.widget_video_window->height();
-
-	qDebug() << "frame x:"
-		<< ui.widget_video_window->x() << "y:"
-		<< ui.widget_video_window->y();
-
-
 }
 
+//单窗口显示视频模式（仅显示第1路）
 void MainMenu::OneWindowsDisplay()
 {
-	int row_size = (ui.widget_video_window->height() - 2) / ONE_WINDOWS;
-	int col_size = (ui.widget_video_window->width() - 2) / ONE_WINDOWS;
+	int row_size = (ui.widget_video_window->height() - ONE_WINDOWS - 1) / ONE_WINDOWS;
+	int col_size = (ui.widget_video_window->width()  - ONE_WINDOWS - 1) / ONE_WINDOWS;
 
 	QRect rect(1, 1, col_size, row_size);
-	video_display_label[0].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 	video_display_label[0].setText(QString("video %1").arg(1));
 	video_display_label[0].setStyleSheet(DISPLAY_LABEL_STYLE);
 	video_display_label[0].setGeometry(rect);
 	video_display_label[0].show();
 }
 
+//四窗口显示视频模式（显示前4路）
 void MainMenu::FourWindowsDisplay()
 {
-	int row_size = (ui.widget_video_window->height() - 3) / FOUR_WINDOWS;
-	int col_size = (ui.widget_video_window->width() - 3) / FOUR_WINDOWS;
+	qDebug() << "window x:" << ui.widget_video_window->width() << "y:" << ui.widget_video_window->height();
+	int row_size = (ui.widget_video_window->height() - FOUR_WINDOWS - 1) / FOUR_WINDOWS;
+	int col_size = (ui.widget_video_window->width()  - FOUR_WINDOWS - 1) / FOUR_WINDOWS;
 
 	int  video_num = 0;
 	for (int i = 0; i < FOUR_WINDOWS; i++)
@@ -336,7 +357,6 @@ void MainMenu::FourWindowsDisplay()
 		for (int j = 0; j < FOUR_WINDOWS; j++)
 		{
 			QRect rect(col_size * j + j, row_size * i + i, col_size, row_size);
-			video_display_label[video_num].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 			video_display_label[video_num].setText(QString("video %1").arg(video_num + 1));
 			video_display_label[video_num].setStyleSheet(DISPLAY_LABEL_STYLE);
 			video_display_label[video_num].setGeometry(rect);
@@ -349,11 +369,11 @@ void MainMenu::FourWindowsDisplay()
 		<< row_size;
 }
 
+//九窗口显示视频模式（显示前9路）
 void MainMenu::NineWindowsDisplay()
 {
-	int row_size = (ui.widget_video_window->height() - 4) / NINE_WINDOWS;
-	int col_size = (ui.widget_video_window->width() - 4) / NINE_WINDOWS;
-
+	int row_size = (ui.widget_video_window->height() - NINE_WINDOWS - 1) / NINE_WINDOWS;
+	int col_size = (ui.widget_video_window->width()  - NINE_WINDOWS - 1) / NINE_WINDOWS;
 
 	int  video_num = 0;
 	for (int i = 0; i < NINE_WINDOWS; i++)
@@ -361,7 +381,7 @@ void MainMenu::NineWindowsDisplay()
 		for (int j = 0; j < NINE_WINDOWS; j++)
 		{
 			QRect rect(col_size * j + j, row_size * i + i, col_size, row_size);
-			video_display_label[video_num].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+			
 			video_display_label[video_num].setText(QString("video %1").arg(video_num + 1));
 			video_display_label[video_num].setStyleSheet(DISPLAY_LABEL_STYLE);
 			video_display_label[video_num].setGeometry(rect);
@@ -374,9 +394,55 @@ void MainMenu::NineWindowsDisplay()
 		<< row_size;
 }
 
+//显示一路视频（由chnId指定）
+void MainMenu::ShowOneChnVideo(int chnId)
+{
+	static int change = 0;
+	if (change % 2 == 0)
+	{
+		int row_size = (ui.widget_video_window->height() - 2);
+		int col_size = (ui.widget_video_window->width() - 2);
+
+		CleanAllDisplayWindows();
+		QRect rect(1, 1, col_size, row_size);
+		video_display_label[chnId].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+		video_display_label[chnId].setText(QString("video %1").arg(chnId + 1));
+		video_display_label[chnId].setStyleSheet(DISPLAY_LABEL_STYLE);
+		video_display_label[chnId].setGeometry(rect);
+		video_display_label[chnId].show();
+	}
+	else
+	{
+		RefreshVideoDisplayWindow();
+	}
+	change++;
+}
+
+//改变一路视频窗口样式（由chnId指定）
+void MainMenu::ChangeOneVideoStyle(int chnId)
+{
+	RefreshVideoDisplayStyle();
+	video_display_label[chnId].setStyleSheet(ClICKED_LABEL_STYLE);
+}
+
+//改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
 	RefreshVideoDisplayWindow();
+}
+
+//处理鼠标单击视频窗口
+void MainMenu::DealSingleClickedVideoLabel(int chn)
+{
+	qDebug() << "mouse single clicked video" << chn;
+	ChangeOneVideoStyle(chn);
+}
+
+//处理鼠标双击视频窗口
+void MainMenu::DealDoubleClickedVideoLabel(int chn)
+{
+	qDebug() << "mouse double clicked video" << chn;
+	ShowOneChnVideo(chn);
 }
 
 
