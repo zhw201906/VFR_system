@@ -275,30 +275,18 @@ void MainMenu::RefreshCameraList()
 		return;
 	}
 
-	//char str[200];
-	//for (int i = 0; i < camera_list.cam_count; i++)
-	//{
-	//	sprintf(str, "Cam[%d]-%s : online=%d\n", camera_list.cam_items[i].chn_id,
-	//		camera_list.cam_items[i].ip, camera_list.cam_items[i].conn_status);
-	//	
-	//}
-
 	qDebug() << camera_list.cam_count;
 	camera_list_buff.clear();
 	ui.listWidget_CameraList->clear();
+
+	ui.listWidget_CameraList->addItem("ip    status");
 	for (int i = 0; i < camera_list.cam_count; ++i)
 	{
-		char str[200];
-		sprintf(str, "Cam[%d]-%s : online=%d\n", camera_list.cam_items[i].chn_id,
-			camera_list.cam_items[i].ip, camera_list.cam_items[i].conn_status);
-		ui.listWidget_CameraList->addItem(str);
 		qDebug() << "list:" << camera_list.cam_items[i].ip;
 		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
-		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
-		qDebug() << "buff:" << camera_list_buff[i];
 		ui.listWidget_CameraList->addItem(camera_list_buff[i]);
 	}
-	ui.listWidget_CameraList->addItem("ip    status");
+	
 }
 
 //刷新视频显示窗口（显示样式）
