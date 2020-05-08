@@ -46,6 +46,7 @@ public:
 public slots:
 	void DealSingleClickedVideoLabel(int chn);
 	void DealDoubleClickedVideoLabel(int chn);
+	void DealAutoPlayAllVideo();
 
 public:
 	Ui::MainMenu ui;

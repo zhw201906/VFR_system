@@ -262,6 +262,10 @@ void MainMenu::DealCloseVzbox()
 	ui.lineEdit_devPort->setEnabled(true);
 	ui.lineEdit_password->setEnabled(true);
 	ui.lineEdit_userName->setEnabled(true);
+
+	ui.listWidget_CameraList->clear();
+	camera_list_buff.clear();
+	RefreshVideoDisplayWindow();
 }
 
 //刷新相机列表
@@ -279,14 +283,12 @@ void MainMenu::RefreshCameraList()
 	camera_list_buff.clear();
 	ui.listWidget_CameraList->clear();
 
-	ui.listWidget_CameraList->addItem("ip    status");
 	for (int i = 0; i < camera_list.cam_count; ++i)
 	{
 		qDebug() << "list:" << camera_list.cam_items[i].ip;
 		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
 		ui.listWidget_CameraList->addItem(camera_list_buff[i]);
-	}
-	
+	}	
 }
 
 //刷新视频显示窗口（显示样式）
@@ -431,6 +433,26 @@ void MainMenu::DealDoubleClickedVideoLabel(int chn)
 {
 	qDebug() << "mouse double clicked video" << chn;
 	ShowOneChnVideo(chn);
+}
+
+//一键播放全部视频
+void MainMenu::DealAutoPlayAllVideo()
+{
+	int video_num = 0;
+	QVector<QString>::iterator it = camera_list_buff.begin();
+	while (it != camera_list_buff.end() && video_num < CAMERA_NUM_LIMIT)
+	{
+		camera_handle_[video_num] = VzLPRClient_Open((*it).toUtf8(),80,"admin","admin");
+		if (camera_handle_[video_num] == 0)
+		{
+			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("打开设备失败！"));
+			return;
+		}
+
+
+		it++;
+		video_num++;
+	}
 }
 
 
