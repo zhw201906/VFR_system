@@ -16,6 +16,8 @@
 #define  FOUR_WINDOWS   2
 #define  NINE_WINDOWS   3
 
+#define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
+
 class MainMenu : public QWidget
 {
 	Q_OBJECT
@@ -28,10 +30,13 @@ public:
 	void DealCloseVzbox();
 	void RefreshCameraList();
 	void RefreshVideoDisplayWindow();
+	void CleanAllDisplayWindows();
 	void OneWindowsDisplay();
 	void FourWindowsDisplay();
 	void NineWindowsDisplay();
 	//void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VZ_LPRC_IMAGE_INFO *pFrame);
+
+	void resizeEvent(QResizeEvent *event);
 
 public:
 	Ui::MainMenu ui;
@@ -53,3 +58,5 @@ public:
 	QVector<QString> camera_list_buff;   //相机列表，通过IP来记录         
 
 };
+
+

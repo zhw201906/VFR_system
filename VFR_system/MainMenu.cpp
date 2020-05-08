@@ -51,17 +51,17 @@ void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV42
 	if (video_data == NULL)
 	{
 		qDebug() << "malloc ";
-		video_data_size = pFrame->height*pFrame->width*3;
+		video_data_size = pFrame->height*pFrame->width * 3;
 		video_data = (unsigned char*)malloc(video_data_size);
 		memset(video_data, 0, video_data_size);
 	}
 	else
 	{
-		if (video_data_size != pFrame->height*pFrame->width*3)
+		if (video_data_size != pFrame->height*pFrame->width * 3)
 		{
 			qDebug() << "----->" << "image data size have changed";
 			free(video_data);
-			video_data_size = pFrame->height*pFrame->width*3;
+			video_data_size = pFrame->height*pFrame->width * 3;
 			video_data = (unsigned char*)malloc(video_data_size);
 			memset(video_data, 0, video_data_size);
 		}
@@ -70,7 +70,7 @@ void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV42
 	if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data, pFrame->width, pFrame->height))
 	{
 		//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
-		video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width*3, QImage::Format_RGB888);
+		video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
 	}
 
 }
@@ -111,7 +111,7 @@ MainMenu::MainMenu(QWidget *parent)
 
 	videoTimer = NULL;
 	vzbox_online_status = false;
-	display_video_windows_num_ = 4;
+	display_video_windows_num_ = FOUR_WINDOWS;
 	video_display_label = NULL;
 
 	//初始化显示视频窗口label
@@ -123,7 +123,7 @@ MainMenu::MainMenu(QWidget *parent)
 	}
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
-		video_display_label[i].setParent(ui.frame_videoImage);
+		video_display_label[i].setParent(ui.widget_video_window);
 	}
 
 	//打开设备按钮
@@ -132,7 +132,9 @@ MainMenu::MainMenu(QWidget *parent)
 	//关闭设备按钮
 	connect(ui.pushButton_closeDev, &QPushButton::clicked, this, &MainMenu::DealCloseVzbox);
 
-	//修改窗口显示视频的个数
+	//显示视频窗口
+	//RefreshVideoDisplayWindow();
+	//修改窗口显示视频的个数   
 	connect(ui.toolButton_oneWindow, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = ONE_WINDOWS;
 		//ui.toolButton_oneWindow
@@ -149,6 +151,7 @@ MainMenu::MainMenu(QWidget *parent)
 		RefreshVideoDisplayWindow();
 	});
 
+	qDebug() << "class finished";
 }
 
 MainMenu::~MainMenu()
@@ -172,10 +175,10 @@ void MainMenu::DealOpenVzbox()
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("设备已打开！"));
 		return;
 	}
-	vzbox_ip_        = ui.lineEdit_devIp->text();
-	vzbox_port_      = ui.lineEdit_devPort->text();
+	vzbox_ip_ = ui.lineEdit_devIp->text();
+	vzbox_port_ = ui.lineEdit_devPort->text();
 	vzbox_user_name_ = ui.lineEdit_userName->text();
-	vzbox_password_  = ui.lineEdit_password->text();
+	vzbox_password_ = ui.lineEdit_password->text();
 	if (vzbox_ip_.isEmpty())
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("IP不允许为空！"));
@@ -207,10 +210,10 @@ void MainMenu::DealOpenVzbox()
 		return;
 	}
 
-	vzbox_handle_ = VzLPRClient_Open(vzbox_ip_.toUtf8(), 
-									 vzbox_port_.toInt(), 
-									 vzbox_user_name_.toUtf8(), 
-									 vzbox_password_.toUtf8());
+	vzbox_handle_ = VzLPRClient_Open(vzbox_ip_.toUtf8(),
+		vzbox_port_.toInt(),
+		vzbox_user_name_.toUtf8(),
+		vzbox_password_.toUtf8());
 	if (vzbox_handle_ == 0)
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("打开设备失败！"));
@@ -272,10 +275,10 @@ void MainMenu::RefreshCameraList()
 		sprintf(str, "Cam[%d]-%s : online=%d\n", camera_list.cam_items[i].chn_id,
 			camera_list.cam_items[i].ip, camera_list.cam_items[i].conn_status);
 		ui.listWidget_CameraList->addItem(str);
-		qDebug() <<"list:"<< camera_list.cam_items[i].ip;
+		qDebug() << "list:" << camera_list.cam_items[i].ip;
 		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
 		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
-		qDebug() <<"buff:"<< camera_list_buff[i];
+		qDebug() << "buff:" << camera_list_buff[i];
 		ui.listWidget_CameraList->addItem(camera_list_buff[i]);
 	}
 	ui.listWidget_CameraList->addItem("ip    status");
@@ -283,40 +286,62 @@ void MainMenu::RefreshCameraList()
 
 void MainMenu::RefreshVideoDisplayWindow()
 {
+	CleanAllDisplayWindows();
 	switch (display_video_windows_num_)
 	{
-		case ONE_WINDOWS:  OneWindowsDisplay();  break;
-		case FOUR_WINDOWS: FourWindowsDisplay(); break;
-		case NINE_WINDOWS: NineWindowsDisplay(); break;
-	}	
+	case ONE_WINDOWS:  OneWindowsDisplay();  break;
+	case FOUR_WINDOWS: FourWindowsDisplay(); break;
+	case NINE_WINDOWS: NineWindowsDisplay(); break;
+	}
+}
+
+void MainMenu::CleanAllDisplayWindows()
+{
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		video_display_label[i].hide();
+	}
+	qDebug() << "frame width:"
+		<< ui.widget_video_window->width() << "height:"
+		<< ui.widget_video_window->height();
+
+	qDebug() << "frame x:"
+		<< ui.widget_video_window->x() << "y:"
+		<< ui.widget_video_window->y();
+
+
 }
 
 void MainMenu::OneWindowsDisplay()
 {
-	int row_size = ui.frame_videoImage->height() / ONE_WINDOWS;
-	int col_size = ui.frame_videoImage->width() / ONE_WINDOWS;
+	int row_size = (ui.widget_video_window->height() - 2) / ONE_WINDOWS;
+	int col_size = (ui.widget_video_window->width() - 2) / ONE_WINDOWS;
 
-	QRect rect(ui.frame_videoImage->x(), ui.frame_videoImage->y(), col_size, row_size);
+	QRect rect(1, 1, col_size, row_size);
+	video_display_label[0].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+	video_display_label[0].setText(QString("video %1").arg(1));
+	video_display_label[0].setStyleSheet(DISPLAY_LABEL_STYLE);
 	video_display_label[0].setGeometry(rect);
-	//video_display_label[0].move(ui.frame_videoImage->x(), ui.frame_videoImage->y());
-	qDebug() << "windows num:" << display_video_windows_num_ << "every video windows width:"
-		<< col_size << "height:"
-		<< row_size;
+	video_display_label[0].show();
 }
 
 void MainMenu::FourWindowsDisplay()
 {
-	int row_size = ui.frame_videoImage->height() / FOUR_WINDOWS;
-	int col_size = ui.frame_videoImage->width()  / FOUR_WINDOWS;
+	int row_size = (ui.widget_video_window->height() - 3) / FOUR_WINDOWS;
+	int col_size = (ui.widget_video_window->width() - 3) / FOUR_WINDOWS;
 
 	int  video_num = 0;
 	for (int i = 0; i < FOUR_WINDOWS; i++)
 	{
 		for (int j = 0; j < FOUR_WINDOWS; j++)
 		{
-			QRect rect(ui.frame_videoImage->x() + col_size * j, ui.frame_videoImage->y() + row_size * i, col_size, row_size);
-			video_display_label[video_num].setText(QString("label %1").arg(video_num + 1));
-			video_display_label[video_num++].setGeometry(rect);
+			QRect rect(col_size * j + j, row_size * i + i, col_size, row_size);
+			video_display_label[video_num].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+			video_display_label[video_num].setText(QString("video %1").arg(video_num + 1));
+			video_display_label[video_num].setStyleSheet(DISPLAY_LABEL_STYLE);
+			video_display_label[video_num].setGeometry(rect);
+			video_display_label[video_num].show();
+			video_num++;
 		}
 	}
 	qDebug() << "windows num:" << display_video_windows_num_ << "every video windows width:"
@@ -326,8 +351,8 @@ void MainMenu::FourWindowsDisplay()
 
 void MainMenu::NineWindowsDisplay()
 {
-	int row_size = ui.frame_videoImage->height() / NINE_WINDOWS;
-	int col_size = ui.frame_videoImage->width() / NINE_WINDOWS;
+	int row_size = (ui.widget_video_window->height() - 4) / NINE_WINDOWS;
+	int col_size = (ui.widget_video_window->width() - 4) / NINE_WINDOWS;
 
 
 	int  video_num = 0;
@@ -335,15 +360,27 @@ void MainMenu::NineWindowsDisplay()
 	{
 		for (int j = 0; j < NINE_WINDOWS; j++)
 		{
-			QRect rect(ui.frame_videoImage->x() + col_size * j, ui.frame_videoImage->y() + row_size * i, col_size, row_size);
-			video_display_label[video_num].setText(QString("label %1").arg(video_num + 1));
-			video_display_label[video_num++].setGeometry(rect);
+			QRect rect(col_size * j + j, row_size * i + i, col_size, row_size);
+			video_display_label[video_num].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+			video_display_label[video_num].setText(QString("video %1").arg(video_num + 1));
+			video_display_label[video_num].setStyleSheet(DISPLAY_LABEL_STYLE);
+			video_display_label[video_num].setGeometry(rect);
+			video_display_label[video_num].show();
+			video_num++;
 		}
 	}
 	qDebug() << "windows num:" << display_video_windows_num_ << "every video windows width:"
 		<< col_size << "height:"
 		<< row_size;
 }
+
+void MainMenu::resizeEvent(QResizeEvent * event)
+{
+	RefreshVideoDisplayWindow();
+}
+
+
+
 
 
 
