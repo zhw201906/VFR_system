@@ -1,0 +1,6 @@
+##ignore these files##
+/Debug/
+/obj/
+/x64/
+/.vs/
+/VFR_system/Resources/
