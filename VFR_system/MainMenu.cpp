@@ -4,9 +4,10 @@
 #include <QImage>
 #include <QPixmap>
 
-static QImage video_image;
-unsigned char *video_data;
-int video_data_size = 0;
+static QImage video_image[CAMERA_NUM_LIMIT];
+unsigned char *video_data[CAMERA_NUM_LIMIT];
+int video_data_size[CAMERA_NUM_LIMIT] = { 0 };
+int video_chnId[CAMERA_NUM_LIMIT] = { 0 };
 
 bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
 {
@@ -46,34 +47,45 @@ void callBack(VzLPRClientHandle handle, void *pUserData, const VZ_LPRC_IMAGE_INF
 	qDebug() << "height:" << pFrame->uHeight << "width:" << pFrame->uWidth << "format:" << pFrame->uPixFmt << "size:" << sizeof(pFrame->pBuffer) << "line size:" << pFrame->uPitch;
 	//unsigned char
 }
+
 void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame)
 {
-	if (video_data == NULL)
+	try
 	{
-		qDebug() << "malloc ";
-		video_data_size = pFrame->height*pFrame->width * 3;
-		video_data = (unsigned char*)malloc(video_data_size);
-		memset(video_data, 0, video_data_size);
-	}
-	else
-	{
-		if (video_data_size != pFrame->height*pFrame->width * 3)
+		int* chnnal_id = (int *)pUserData;
+
+		if (video_data[*chnnal_id] == NULL)
 		{
-			qDebug() << "----->" << "image data size have changed";
-			free(video_data);
-			video_data_size = pFrame->height*pFrame->width * 3;
-			video_data = (unsigned char*)malloc(video_data_size);
-			memset(video_data, 0, video_data_size);
+			qDebug() << "malloc ";
+			video_data_size[*chnnal_id] = pFrame->height*pFrame->width * 3;
+			video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
+			memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
+		}
+		else
+		{
+			if (video_data_size[*chnnal_id] != pFrame->height*pFrame->width * 3)
+			{
+				qDebug() << "----->" << "image data size have changed. chnnal ID:" << *chnnal_id;
+				free(video_data[*chnnal_id]);
+				video_data_size[*chnnal_id] = pFrame->height*pFrame->width * 3;
+				video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
+				memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
+			}
+		}
+
+		//qDebug() << "chnnid:" << *chnnal_id;
+		if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data[*chnnal_id], pFrame->width, pFrame->height))
+		{
+			//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
+			video_image[*chnnal_id] = QImage(video_data[*chnnal_id], pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
 		}
 	}
-
-	if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data, pFrame->width, pFrame->height))
+	catch (...)
 	{
-		//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
-		video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
+		qDebug() << "display video error " ;
 	}
-
 }
+
 //void VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VZ_LPRC_IMAGE_INFO * pFrame)
 //{
 //	if (video_data == NULL)
@@ -168,6 +180,30 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.toolButton_nineWindows->setEnabled(false);
 	});
 
+	//一键播放全部视频
+	connect(ui.pushButton_allVideoPlay, &QPushButton::clicked, [=]() {
+		try 
+		{
+			DealAutoPlayAllVideo();
+			video_show_timer_.start(50);
+		}
+		catch (...)
+		{
+			qDebug() << "play failed ";
+		}
+	});
+
+	//播放视频
+	connect(&video_show_timer_, &QTimer::timeout, [=]() {
+		for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+		{
+			if (!video_image[i].isNull())
+			{
+				QImage img = video_image[i].scaled(video_display_label[i].width(), video_display_label[i].height());
+				video_display_label[i].setPixmap(QPixmap::fromImage(img));
+			}
+		}
+	});
 }
 
 MainMenu::~MainMenu()
@@ -415,6 +451,37 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 	video_display_label[chnId].setStyleSheet(ClICKED_LABEL_STYLE);
 }
 
+//相机视频回调显示
+//void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
+//{
+//	if (video_data == NULL)
+//	{
+//		qDebug() << "malloc ";
+//		video_data_size = pFrame->height*pFrame->width * 3;
+//		video_data = (unsigned char*)malloc(video_data_size);
+//		memset(video_data, 0, video_data_size);
+//	}
+//	else
+//	{
+//		if (video_data_size != pFrame->height*pFrame->width * 3)
+//		{
+//			qDebug() << "----->" << "image data size have changed";
+//			free(video_data);
+//			video_data_size = pFrame->height*pFrame->width * 3;
+//			video_data = (unsigned char*)malloc(video_data_size);
+//			memset(video_data, 0, video_data_size);
+//		}
+//	}
+//
+//	int* chnnal_id = (int *)pUserData;
+//	qDebug() << "chnnid:" << *chnnal_id;
+//	//if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data, pFrame->width, pFrame->height))
+//	//{
+//	//	//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
+//	//	video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
+//	//}
+//}
+
 //改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
@@ -438,6 +505,11 @@ void MainMenu::DealDoubleClickedVideoLabel(int chn)
 //一键播放全部视频
 void MainMenu::DealAutoPlayAllVideo()
 {
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		video_chnId[i] = i;
+	}
+
 	int video_num = 0;
 	QVector<QString>::iterator it = camera_list_buff.begin();
 	while (it != camera_list_buff.end() && video_num < CAMERA_NUM_LIMIT)
@@ -445,11 +517,16 @@ void MainMenu::DealAutoPlayAllVideo()
 		camera_handle_[video_num] = VzLPRClient_Open((*it).toUtf8(),80,"admin","admin");
 		if (camera_handle_[video_num] == 0)
 		{
-			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("打开设备失败！"));
-			return;
+			qDebug() << "open camera " << *it << "failed,video ID:" << video_num;
+			it++;
+			video_num++;
+			continue;
 		}
 
-
+		qDebug() << "open camera " << *it << "success, video ID:" << video_num;
+		//VzLPRClient_StartRealPlayByChannel_V2(camera_handle_[video_num],NULL,0,0,)
+		//VZLPRC_VIDEO_FRAME_CALLBACK pFun_cb = (VZLPRC_VIDEO_FRAME_CALLBACK)&MainMenu::VideoFrameCallBack;
+		VzLPRClient_SetVideoFrameCallBack(camera_handle_[video_num], ::VideoFrameCallBack, (void *)&video_chnId[video_num]);
 		it++;
 		video_num++;
 	}

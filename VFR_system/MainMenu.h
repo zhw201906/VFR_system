@@ -39,7 +39,8 @@ public:
 	void NineWindowsDisplay();
 	void ShowOneChnVideo(int chnId);
 	void ChangeOneVideoStyle(int chnId);
-	//void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VZ_LPRC_IMAGE_INFO *pFrame);
+
+	void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
 	void resizeEvent(QResizeEvent *event);
 
@@ -67,6 +68,7 @@ public:
 	DisplayVideoLabel  *video_display_label;   //初始化
 	QVector<QString> camera_list_buff;         //相机列表，通过IP来记录         
 
+	QTimer  video_show_timer_;
 };
 
 
