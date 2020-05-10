@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QImage>
 #include <QPixmap>
+#include <QPainter>
 
 static QImage video_image[CAMERA_NUM_LIMIT];
 unsigned char *video_data[CAMERA_NUM_LIMIT];
@@ -130,6 +131,9 @@ MainMenu::MainMenu(QWidget *parent)
 	ui.toolButton_fourWindows->setEnabled(false);
 	ui.toolButton_nineWindows->setEnabled(true);
 
+    //初始化显示图标
+    SetIconInit();
+
 	//初始化显示视频窗口label
 	video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
 	if (video_display_label == NULL)
@@ -153,11 +157,10 @@ MainMenu::MainMenu(QWidget *parent)
 	connect(ui.pushButton_closeDev, &QPushButton::clicked, this, &MainMenu::DealCloseVzbox);
 
 	//显示视频窗口
-	//RefreshVideoDisplayWindow();
+	RefreshVideoDisplayWindow();
 	//修改窗口显示视频的个数   
 	connect(ui.toolButton_oneWindow, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = ONE_WINDOWS;
-		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
 		ui.toolButton_oneWindow->setEnabled(false);
 		ui.toolButton_fourWindows->setEnabled(true);
@@ -165,7 +168,6 @@ MainMenu::MainMenu(QWidget *parent)
 	});
 	connect(ui.toolButton_fourWindows, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = FOUR_WINDOWS;
-		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
 		ui.toolButton_oneWindow->setEnabled(true);
 		ui.toolButton_fourWindows->setEnabled(false);
@@ -173,7 +175,6 @@ MainMenu::MainMenu(QWidget *parent)
 	});
 	connect(ui.toolButton_nineWindows, &QPushButton::clicked, [=]() {
 		display_video_windows_num_ = NINE_WINDOWS;
-		//ui.toolButton_oneWindow
 		RefreshVideoDisplayWindow();
 		ui.toolButton_oneWindow->setEnabled(true);
 		ui.toolButton_fourWindows->setEnabled(true);
@@ -193,7 +194,7 @@ MainMenu::MainMenu(QWidget *parent)
 		}
 	});
 
-	//播放视频
+	//播放视频（定时器）
 	connect(&video_show_timer_, &QTimer::timeout, [=]() {
 		for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 		{
@@ -204,6 +205,33 @@ MainMenu::MainMenu(QWidget *parent)
 			}
 		}
 	});
+
+    //通过按钮切换系统功能
+    connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(0);
+        RefreshVideoDisplayWindow();
+    });
+
+    connect(ui.pushButton_cameraManage, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(1);
+    });
+
+    connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(2);
+    });
+
+    connect(ui.pushButton_snapResult, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(3);
+    });
+
+    connect(ui.pushButton_trackPath, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(4);
+    });
+
+    connect(ui.pushButton_smartTest, &QPushButton::clicked, [=]() {
+        ChangeSystemMode(5);
+    });
+
 }
 
 MainMenu::~MainMenu()
@@ -217,6 +245,20 @@ MainMenu::~MainMenu()
 		delete[]video_display_label;
 		video_display_label = NULL;
 	}
+}
+
+//设置按钮图标
+void MainMenu::SetIconInit()
+{
+    ui.toolButton_addCamera->setIcon(QIcon("./icon/add.jpg"));
+    ui.toolButton_delCamera->setIcon(QIcon("./icon/del.jpg"));
+    ui.toolButton_editCamera->setIcon(QIcon("./icon/edit.jpg"));
+    ui.toolButton_refreshCamera->setIcon(QIcon("./icon/refresh.jpg"));
+
+    ui.toolButton_addLibrary->setIcon(QIcon("./icon/add.jpg"));
+    ui.toolButton_delLibrary->setIcon(QIcon("./icon/del.jpg"));
+    ui.toolButton_editLibrary->setIcon(QIcon("./icon/edit.jpg"));
+    ui.toolButton_refreshLibrary->setIcon(QIcon("./icon/refresh.jpg"));
 }
 
 //打开设备
@@ -481,6 +523,21 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 //	//	video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
 //	//}
 //}
+
+//切换系统功能模式（通过索引切换）
+void MainMenu::ChangeSystemMode(int index)
+{
+    ui.stackedWidget_systemMode->setCurrentIndex(index);
+}
+
+void MainMenu::paintEvent(QPaintEvent * event)
+{
+    QPainter painter(this);
+    QPixmap pix;
+    pix.load("./icon/MainBackGround.jpg");
+    //指定长宽
+    painter.drawPixmap(0, 0, this->width(), this->height(), pix);
+}
 
 //改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)

@@ -27,6 +27,7 @@ public:
 	MainMenu(QWidget *parent = Q_NULLPTR);
 	~MainMenu();
 
+    void SetIconInit();
 	void DealOpenVzbox();
 	void DealCloseVzbox();
 	void RefreshCameraList();
@@ -42,6 +43,10 @@ public:
 
 	void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
+
+    void ChangeSystemMode(int index);
+
+    void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
 
 public slots:
