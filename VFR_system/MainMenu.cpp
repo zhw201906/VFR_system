@@ -5,10 +5,11 @@
 #include <QPixmap>
 #include <QPainter>
 
-static QImage video_image[CAMERA_NUM_LIMIT];
-unsigned char *video_data[CAMERA_NUM_LIMIT];
-int video_data_size[CAMERA_NUM_LIMIT] = { 0 };
-int video_chnId[CAMERA_NUM_LIMIT] = { 0 };
+QMutex video_cache_mutex;
+unsigned char  *video_data[CAMERA_NUM_LIMIT];               //存储原数图像数据指针
+unsigned int   video_data_size[CAMERA_NUM_LIMIT] = { 0 };   //记录原始数据大小，动态分配空间，防止内存非法访问
+unsigned int   video_chnId[CAMERA_NUM_LIMIT] = { 0 };       //记录相机通道号
+QQueue<QImage> video_frame_cache_[CAMERA_NUM_LIMIT];        //视频缓存
 
 bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
 {
@@ -43,80 +44,22 @@ bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsi
 	return true;
 }
 
-void callBack(VzLPRClientHandle handle, void *pUserData, const VZ_LPRC_IMAGE_INFO *pFrame)
+
+void ClearVideoFrameCache()
 {
-	qDebug() << "height:" << pFrame->uHeight << "width:" << pFrame->uWidth << "format:" << pFrame->uPixFmt << "size:" << sizeof(pFrame->pBuffer) << "line size:" << pFrame->uPitch;
-	//unsigned char
-}
-
-void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame)
-{
-	try
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
-		int* chnnal_id = (int *)pUserData;
-
-		if (video_data[*chnnal_id] == NULL)
-		{
-			qDebug() << "malloc ";
-			video_data_size[*chnnal_id] = pFrame->height*pFrame->width * 3;
-			video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
-			memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
-		}
-		else
-		{
-			if (video_data_size[*chnnal_id] != pFrame->height*pFrame->width * 3)
-			{
-				qDebug() << "----->" << "image data size have changed. chnnal ID:" << *chnnal_id;
-				free(video_data[*chnnal_id]);
-				video_data_size[*chnnal_id] = pFrame->height*pFrame->width * 3;
-				video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
-				memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
-			}
-		}
-
-		//qDebug() << "chnnid:" << *chnnal_id;
-		if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data[*chnnal_id], pFrame->width, pFrame->height))
-		{
-			//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
-			video_image[*chnnal_id] = QImage(video_data[*chnnal_id], pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
-		}
-	}
-	catch (...)
-	{
-		qDebug() << "display video error " ;
+		video_frame_cache_[i].clear();
+		video_data_size[i] = 0;
+		//if (video_data[i] != NULL)
+		//{
+		//	free(video_data[i]);
+		//	video_data[i] = NULL;
+		//}
 	}
 }
 
-//void VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VZ_LPRC_IMAGE_INFO * pFrame)
-//{
-//	if (video_data == NULL)
-//	{
-//		video_data_size = pFrame->uPitch*pFrame->uHeight;
-//		video_data = (unsigned char*)malloc(video_data_size);
-//		memset(video_data, 0, video_data_size);
-//	}
-//	else
-//	{
-//		if (video_data_size != pFrame->uPitch*pFrame->uHeight)
-//		{
-//			qDebug() << "----->" << "image data size have changed";
-//			free(video_data);
-//			video_data_size = pFrame->uPitch*pFrame->uHeight;
-//			video_data = (unsigned char*)malloc(video_data_size);
-//			memset(video_data, 0, video_data_size);
-//		}
-//	}
-//
-//	memcpy(video_data, pFrame->pBuffer, video_data_size);
-//	video_image = QImage(video_data, pFrame->uWidth, pFrame->uHeight, pFrame->uPitch, QImage::Format_BGR888);
-//
-//
-//	if (!video_image.isNull())
-//		qDebug() << "image data:" << video_data << "   image data size:" << sizeof(video_data);
-//		//qDebug() << "height:" << pFrame->uHeight << "width:" << pFrame->uWidth << "format:" << pFrame->uPixFmt << "size:" << sizeof(pFrame->pBuffer) << "line size:" << pFrame->uPitch;
-//
-//}
-
+//主界面构造函数
 MainMenu::MainMenu(QWidget *parent)
 	: QWidget(parent)
 {
@@ -126,6 +69,7 @@ MainMenu::MainMenu(QWidget *parent)
 	vzbox_online_status = false;
 	display_video_windows_num_ = FOUR_WINDOWS;
 	video_display_label = NULL;
+	video_register_finished_ = false;
 
 	ui.toolButton_oneWindow->setEnabled(true);
 	ui.toolButton_fourWindows->setEnabled(false);
@@ -186,7 +130,7 @@ MainMenu::MainMenu(QWidget *parent)
 		try 
 		{
 			DealAutoPlayAllVideo();
-			video_show_timer_.start(50);
+			video_show_timer_.start(30);
 		}
 		catch (...)
 		{
@@ -196,12 +140,27 @@ MainMenu::MainMenu(QWidget *parent)
 
 	//播放视频（定时器）
 	connect(&video_show_timer_, &QTimer::timeout, [=]() {
+		QMutexLocker locker(&video_cache_mutex);
 		for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 		{
-			if (!video_image[i].isNull())
+			if (video_frame_cache_[i].size() > 0)
 			{
-				QImage img = video_image[i].scaled(video_display_label[i].width(), video_display_label[i].height());
-				video_display_label[i].setPixmap(QPixmap::fromImage(img));
+				QImage img = video_frame_cache_[i].front();
+				video_frame_cache_[i].pop_front();
+
+				try 
+				{
+					if (!img.isNull() && img.width() > video_display_label[i].width() && img.height() > video_display_label[i].height())
+					{						
+						QImage img_show = img.scaled(video_display_label[i].width(), video_display_label[i].height());
+						video_display_label[i].setPixmap(QPixmap::fromImage(img_show));
+					}					
+				}
+				catch (...)
+				{
+					qDebug() << "show image get failed";
+					continue;
+				}				
 			}
 		}
 	});
@@ -236,7 +195,12 @@ MainMenu::MainMenu(QWidget *parent)
 
 MainMenu::~MainMenu()
 {
-	free(video_data);
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		if (video_data[i] != NULL)
+			free(video_data[i]);
+	}
+	
 	VzLPRClient_Close(vzbox_handle_);
 	//VzLPRClient_Close(camera_handle_);
 	VzLPRClient_Cleanup();
@@ -341,9 +305,11 @@ void MainMenu::DealCloseVzbox()
 	ui.lineEdit_password->setEnabled(true);
 	ui.lineEdit_userName->setEnabled(true);
 
-	ui.listWidget_CameraList->clear();
+	video_show_timer_.stop();
+	ui.listWidget_CameraList->clear();	
 	camera_list_buff.clear();
-	RefreshVideoDisplayWindow();
+	CloseAllVideoDisplay();
+	ClearVideoFrameCache();
 }
 
 //刷新相机列表
@@ -387,6 +353,28 @@ void MainMenu::RefreshVideoDisplayStyle()
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
 		video_display_label[i].setStyleSheet(DISPLAY_LABEL_STYLE);
+	}
+}
+
+//关闭所有显示的视频
+void MainMenu::CloseAllVideoDisplay()
+{
+	CloseAllCameraHandle();
+	RefreshVideoDisplayWindow();
+}
+
+//关闭所有已打开的相机
+void MainMenu::CloseAllCameraHandle()
+{
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		if (camera_handle_[i] != 0)
+		{			
+			VzLPRClient_StopRealPlay(camera_handle_[i]);
+			VzLPRClient_StopRealPlayByChannel_V2(camera_handle_[i]);
+			VzLPRClient_Close(camera_handle_[i]);
+
+		}
 	}
 }
 
@@ -493,36 +481,50 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 	video_display_label[chnId].setStyleSheet(ClICKED_LABEL_STYLE);
 }
 
-//相机视频回调显示
-//void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
-//{
-//	if (video_data == NULL)
-//	{
-//		qDebug() << "malloc ";
-//		video_data_size = pFrame->height*pFrame->width * 3;
-//		video_data = (unsigned char*)malloc(video_data_size);
-//		memset(video_data, 0, video_data_size);
-//	}
-//	else
-//	{
-//		if (video_data_size != pFrame->height*pFrame->width * 3)
-//		{
-//			qDebug() << "----->" << "image data size have changed";
-//			free(video_data);
-//			video_data_size = pFrame->height*pFrame->width * 3;
-//			video_data = (unsigned char*)malloc(video_data_size);
-//			memset(video_data, 0, video_data_size);
-//		}
-//	}
-//
-//	int* chnnal_id = (int *)pUserData;
-//	qDebug() << "chnnid:" << *chnnal_id;
-//	//if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data, pFrame->width, pFrame->height))
-//	//{
-//	//	//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
-//	//	video_image = QImage(video_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
-//	//}
-//}
+//相机视频回调缓存
+void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
+{
+	int* chnnal_id = (int *)pUserData;
+	qDebug() << "static VideoFrameCallBack chnnal:" << *chnnal_id;
+
+	if (video_data[*chnnal_id] == NULL)
+	{
+		qDebug() << "malloc chnnalId:" << *chnnal_id;
+		video_data_size[*chnnal_id] = pFrame->height * pFrame->width * 3;
+		video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
+		memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
+	}
+	else
+	{
+		if (video_data_size[*chnnal_id] != pFrame->height * pFrame->width * 3)
+		{
+			//qDebug() << "----->" << "image data size have changed" << *chnnal_id;
+			free(video_data[*chnnal_id]);
+			video_data[*chnnal_id] = NULL;
+			video_data_size[*chnnal_id] = pFrame->height * pFrame->width * 3;
+			video_data[*chnnal_id] = (unsigned char*)malloc(video_data_size[*chnnal_id]);
+			memset(video_data[*chnnal_id], 0, video_data_size[*chnnal_id]);
+		}
+	}
+
+	if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, video_data[*chnnal_id], pFrame->width, pFrame->height))
+	{
+		QMutexLocker locker(&video_cache_mutex);
+
+		//qDebug() << "+++++video_get image chnnal_id:" << *chnnal_id;
+		//qDebug() << "Ysize:" << pFrame->widthStepY << "Usize:" << pFrame->widthStepU << "Vsize:" << pFrame->widthStepV << "height:" << pFrame->height << "width:" << pFrame->width;
+		QImage video_image = QImage(video_data[*chnnal_id], pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
+		if (video_frame_cache_[*chnnal_id].size() >= FRAME_NUM_SIZE_LIMIT)
+		{
+			video_frame_cache_[*chnnal_id].pop_front();
+			video_frame_cache_[*chnnal_id].push_back(video_image);
+		}
+		else
+		{
+			video_frame_cache_[*chnnal_id].push_back(video_image);
+		}
+	}
+}
 
 //切换系统功能模式（通过索引切换）
 void MainMenu::ChangeSystemMode(int index)
@@ -532,11 +534,11 @@ void MainMenu::ChangeSystemMode(int index)
 
 void MainMenu::paintEvent(QPaintEvent * event)
 {
-    QPainter painter(this);
-    QPixmap pix;
-    pix.load("./icon/MainBackGround.jpg");
-    //指定长宽
-    painter.drawPixmap(0, 0, this->width(), this->height(), pix);
+    //QPainter painter(this);
+    //QPixmap pix;
+    //pix.load("./icon/MainBackGround.jpg");
+    ////指定长宽
+    //painter.drawPixmap(0, 0, this->width(), this->height(), pix);
 }
 
 //改变大小时刷新视频窗口
@@ -562,11 +564,6 @@ void MainMenu::DealDoubleClickedVideoLabel(int chn)
 //一键播放全部视频
 void MainMenu::DealAutoPlayAllVideo()
 {
-	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
-	{
-		video_chnId[i] = i;
-	}
-
 	int video_num = 0;
 	QVector<QString>::iterator it = camera_list_buff.begin();
 	while (it != camera_list_buff.end() && video_num < CAMERA_NUM_LIMIT)
@@ -579,13 +576,19 @@ void MainMenu::DealAutoPlayAllVideo()
 			video_num++;
 			continue;
 		}
-
 		qDebug() << "open camera " << *it << "success, video ID:" << video_num;
-		//VzLPRClient_StartRealPlayByChannel_V2(camera_handle_[video_num],NULL,0,0,)
-		//VZLPRC_VIDEO_FRAME_CALLBACK pFun_cb = (VZLPRC_VIDEO_FRAME_CALLBACK)&MainMenu::VideoFrameCallBack;
-		VzLPRClient_SetVideoFrameCallBack(camera_handle_[video_num], ::VideoFrameCallBack, (void *)&video_chnId[video_num]);
+		
 		it++;
 		video_num++;
+	}
+
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		if (camera_handle_[i] != 0)
+		{
+			video_chnId[i] = i;
+			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], MainMenu::VideoFrameCallBack, (void *)&video_chnId[i]);
+		}
 	}
 }
 

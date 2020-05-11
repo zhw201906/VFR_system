@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DisplayVideoLabel.cpp" />
+    <ClCompile Include="DisplayVideoThread.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="VFR_system.cpp" />
@@ -169,6 +170,7 @@
   <ItemGroup>
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />
+    <QtMoc Include="DisplayVideoThread.h" />
     <ClInclude Include="sdkHeadFile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

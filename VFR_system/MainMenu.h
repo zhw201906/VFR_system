@@ -6,11 +6,17 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QVector>
+#include <QQueue>
+#include <QMutex>
+#include <QMutexLocker>
+#include <functional> 
 
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
+#include "DisplayVideoThread.h"
 
-#define  CAMERA_NUM_LIMIT  9
+#define  CAMERA_NUM_LIMIT      9
+#define  FRAME_NUM_SIZE_LIMIT  3
 
 #define  ONE_WINDOWS    1
 #define  FOUR_WINDOWS   2
@@ -19,9 +25,12 @@
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
 #define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
 
+//typedef std::function<void(VzLPRClientHandle, void *, const VzYUV420P *)> VZLPRC_VIDEO_FRAME_CALLBACK;
+
 class MainMenu : public QWidget
 {
 	Q_OBJECT
+
 
 public:
 	MainMenu(QWidget *parent = Q_NULLPTR);
@@ -34,6 +43,8 @@ public:
 
 	void RefreshVideoDisplayWindow();
 	void RefreshVideoDisplayStyle();
+	void CloseAllVideoDisplay();
+	void CloseAllCameraHandle();
 	void CleanAllDisplayWindows();
 	void OneWindowsDisplay();
 	void FourWindowsDisplay();
@@ -41,7 +52,7 @@ public:
 	void ShowOneChnVideo(int chnId);
 	void ChangeOneVideoStyle(int chnId);
 
-	void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
+	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
 
     void ChangeSystemMode(int index);
@@ -73,7 +84,15 @@ public:
 	DisplayVideoLabel  *video_display_label;   //初始化
 	QVector<QString> camera_list_buff;         //相机列表，通过IP来记录         
 
+
 	QTimer  video_show_timer_;
+	bool    video_register_finished_;
+	int     video_index_;
+
+private:
+	QMutex get_frame_mutex_; 
+
+
 };
 
 
