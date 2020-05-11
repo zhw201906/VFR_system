@@ -104,7 +104,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="onlineMonitoring">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -116,7 +116,7 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="10,1">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="10,2">
           <item>
            <widget class="QWidget" name="widget_video_window" native="true"/>
           </item>
@@ -136,8 +136,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>1126</width>
-                  <height>69</height>
+                  <width>1081</width>
+                  <height>98</height>
                  </rect>
                 </property>
                </widget>
@@ -309,8 +309,14 @@
                     <height>30</height>
                    </size>
                   </property>
+                  <property name="font">
+                   <font>
+                    <family>04b_21</family>
+                    <pointsize>14</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
-                   <string>...</string>
+                   <string>口</string>
                   </property>
                  </widget>
                 </item>
@@ -322,8 +328,14 @@
                     <height>30</height>
                    </size>
                   </property>
+                  <property name="font">
+                   <font>
+                    <family>04b_21</family>
+                    <pointsize>14</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
-                   <string>...</string>
+                   <string>+</string>
                   </property>
                  </widget>
                 </item>
@@ -335,8 +347,14 @@
                     <height>30</height>
                    </size>
                   </property>
+                  <property name="font">
+                   <font>
+                    <family>04b_21</family>
+                    <pointsize>14</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
-                   <string>...</string>
+                   <string>++</string>
                   </property>
                  </widget>
                 </item>
@@ -382,7 +400,7 @@
                 <item row="1" column="0">
                  <widget class="QPushButton" name="pushButton_allVideoStop">
                   <property name="text">
-                   <string>停止</string>
+                   <string>全部停止</string>
                   </property>
                  </widget>
                 </item>
@@ -488,6 +506,12 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
              <item>
               <widget class="QToolButton" name="toolButton_addCamera">
                <property name="minimumSize">
@@ -637,12 +661,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="widget_2" native="true">
+        <widget class="QWidget" name="widget_cameraConfigParam" native="true">
          <widget class="QPushButton" name="pushButton_6">
           <property name="geometry">
            <rect>
-            <x>60</x>
-            <y>790</y>
+            <x>240</x>
+            <y>800</y>
             <width>93</width>
             <height>28</height>
            </rect>
@@ -650,6 +674,111 @@
           <property name="text">
            <string>保存配置</string>
           </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_16">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>790</y>
+            <width>93</width>
+            <height>28</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>恢复默认</string>
+          </property>
+         </widget>
+         <widget class="QFrame" name="frame_15">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>70</y>
+            <width>181</width>
+            <height>641</height>
+           </rect>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <widget class="QLabel" name="label_13">
+           <property name="geometry">
+            <rect>
+             <x>40</x>
+             <y>30</y>
+             <width>101</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <family>04b_21</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>人脸抓拍：</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_14">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>130</y>
+             <width>141</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <family>04b_21</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>输出人脸属性：</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_15">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>200</y>
+             <width>141</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <family>04b_21</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>抓拍次数：</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_16">
+           <property name="geometry">
+            <rect>
+             <x>40</x>
+             <y>80</y>
+             <width>101</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <family>04b_21</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>人脸识别：</string>
+           </property>
+          </widget>
          </widget>
         </widget>
        </item>
@@ -674,22 +803,22 @@
          <property name="title">
           <string>用户组管理</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,20">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,20">
           <item>
-           <widget class="QFrame" name="frame_2">
+           <widget class="QWidget" name="widget_2" native="true">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
             <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
              <item>
               <widget class="QToolButton" name="toolButton_addLibrary">
                <property name="minimumSize">
@@ -843,12 +972,48 @@
          <property name="title">
           <string>用户管理</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
+         <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,10,1">
           <item>
            <widget class="QWidget" name="widget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <layout class="QHBoxLayout" name="horizontalLayout_7">
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QLineEdit" name="lineEdit_userListSearch">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_userListSearch">
+               <property name="text">
+                <string>检索</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_21">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>54</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_addOneUser">
                <property name="text">
                 <string>添加用户</string>
                </property>
@@ -859,6 +1024,9 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Preferred</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>40</width>
@@ -868,7 +1036,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="pushButton_addManyUser">
                <property name="text">
                 <string>批量添加</string>
                </property>
@@ -879,6 +1047,9 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Preferred</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>40</width>
@@ -888,7 +1059,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_3">
+              <widget class="QPushButton" name="pushButton_modifyUser">
                <property name="text">
                 <string>修改用户</string>
                </property>
@@ -899,6 +1070,9 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Preferred</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>40</width>
@@ -908,7 +1082,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_4">
+              <widget class="QPushButton" name="pushButton_delManyUser">
                <property name="text">
                 <string>批量删除</string>
                </property>
@@ -916,6 +1090,50 @@
              </item>
              <item>
               <spacer name="horizontalSpacer_16">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Preferred</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_refreshUserList">
+               <property name="text">
+                <string>刷新列表</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="listWidget_2"/>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame_16">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_15">
+             <item>
+              <spacer name="horizontalSpacer_20">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -928,17 +1146,41 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_5">
+              <widget class="QPushButton" name="pushButton_userListHead">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>刷新列表</string>
+                <string>首页</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_userListLast">
+               <property name="text">
+                <string>上一页</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_userListNext">
+               <property name="text">
+                <string>下一页</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_userListTail">
+               <property name="text">
+                <string>尾页</string>
                </property>
               </widget>
              </item>
             </layout>
            </widget>
-          </item>
-          <item>
-           <widget class="QListWidget" name="listWidget_2"/>
           </item>
          </layout>
         </widget>
@@ -1003,7 +1245,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_7">
+              <widget class="QPushButton" name="pushButton_loadCompareImage1">
                <property name="text">
                 <string>上传照片</string>
                </property>
@@ -1047,7 +1289,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_8">
+              <widget class="QPushButton" name="pushButton_loadCompareImage2">
                <property name="text">
                 <string>上传照片</string>
                </property>
@@ -1066,14 +1308,29 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_11">
              <item>
-              <widget class="QToolButton" name="toolButton_10">
+              <widget class="QToolButton" name="toolButton_compareFaceResult">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>...</string>
+                <string/>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_9">
+              <widget class="QPushButton" name="pushButton_compareFace">
+               <property name="maximumSize">
+                <size>
+                 <width>150</width>
+                 <height>16777215</height>
+                </size>
+               </property>
                <property name="text">
                 <string>人脸比对</string>
                </property>
@@ -1239,7 +1496,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_10">
+              <widget class="QPushButton" name="pushButton_loadDetectImage">
                <property name="text">
                 <string>上传照片</string>
                </property>
@@ -1290,14 +1547,14 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_12">
              <item>
-              <widget class="QPushButton" name="pushButton_11">
+              <widget class="QPushButton" name="pushButton_detectFace">
                <property name="text">
                 <string>人脸检测</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_12">
+              <widget class="QPushButton" name="pushButton_viewDetectResult">
                <property name="text">
                 <string>查看结果</string>
                </property>
@@ -1389,7 +1646,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_13">
+              <widget class="QPushButton" name="pushButton_loadRecognizeImage">
                <property name="text">
                 <string>上传照片</string>
                </property>
@@ -1440,14 +1697,14 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_13">
              <item>
-              <widget class="QPushButton" name="pushButton_14">
+              <widget class="QPushButton" name="pushButton_recognizeFace">
                <property name="text">
                 <string>人脸识别</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_15">
+              <widget class="QPushButton" name="pushButton_viewRecognizeResult">
                <property name="text">
                 <string>查看结果</string>
                </property>

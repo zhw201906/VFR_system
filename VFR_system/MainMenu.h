@@ -90,7 +90,7 @@ public:
 	int     video_index_;
 
 private:
-	QMutex get_frame_mutex_; 
+	QMutex  get_frame_mutex_; 
 
 
 };

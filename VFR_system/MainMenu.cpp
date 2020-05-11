@@ -44,7 +44,7 @@ bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsi
 	return true;
 }
 
-
+//清除相机缓存
 void ClearVideoFrameCache()
 {
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
@@ -127,6 +127,12 @@ MainMenu::MainMenu(QWidget *parent)
 
 	//一键播放全部视频
 	connect(ui.pushButton_allVideoPlay, &QPushButton::clicked, [=]() {
+        if (!vzbox_online_status)
+        {
+            msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("没有打开的设备！"));
+            return;
+        }
+
 		try 
 		{
 			DealAutoPlayAllVideo();
@@ -532,6 +538,7 @@ void MainMenu::ChangeSystemMode(int index)
     ui.stackedWidget_systemMode->setCurrentIndex(index);
 }
 
+//绘制系统背景
 void MainMenu::paintEvent(QPaintEvent * event)
 {
     //QPainter painter(this);
