@@ -23,6 +23,9 @@
       <Extensions>qrc;*</Extensions>
       <ParseFiles>false</ParseFiles>
     </Filter>
+    <Filter Include="Third Files">
+      <UniqueIdentifier>{2ce8ac2a-fde3-4e87-9e97-5385309665b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +43,9 @@
     <ClCompile Include="DisplayVideoThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DisplayUserInfoItem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -54,12 +60,18 @@
     <QtMoc Include="DisplayVideoThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="DisplayUserInfoItem.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="VFR_system.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="MainMenu.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="DisplayUserInfoItem.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -71,6 +83,21 @@
   <ItemGroup>
     <ClInclude Include="sdkHeadFile.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\VzBoxClientSDK.h">
+      <Filter>Third Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\VzClientSDK.h">
+      <Filter>Third Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\VzClientSDKDefine.h">
+      <Filter>Third Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\VzFaceClientSDK.h">
+      <Filter>Third Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\VzLPRClientSDK.h">
+      <Filter>Third Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

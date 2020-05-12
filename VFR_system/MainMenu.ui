@@ -104,7 +104,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="onlineMonitoring">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -136,8 +136,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>1081</width>
-                  <height>98</height>
+                  <width>1126</width>
+                  <height>109</height>
                  </rect>
                 </property>
                </widget>
@@ -655,7 +655,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListWidget" name="listWidget_3"/>
+           <widget class="QListWidget" name="listWidget_cameraManageList"/>
           </item>
          </layout>
         </widget>
@@ -962,7 +962,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListWidget" name="listWidget"/>
+           <widget class="QListWidget" name="listWidget_userGroupList"/>
           </item>
          </layout>
         </widget>
@@ -1115,7 +1115,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListWidget" name="listWidget_2"/>
+           <widget class="QListWidget" name="listWidget_userInfoList"/>
           </item>
           <item>
            <widget class="QFrame" name="frame_16">

@@ -14,10 +14,12 @@
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
 #include "DisplayVideoThread.h"
+#include "DisplayUserInfoItem.h"
 
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
 
+#define  VIDEO_FRAME_RATE      25
 #define  ONE_WINDOWS    1
 #define  FOUR_WINDOWS   2
 #define  NINE_WINDOWS   3
@@ -43,6 +45,7 @@ public:
 
 	void RefreshVideoDisplayWindow();
 	void RefreshVideoDisplayStyle();
+	void AutoPlayAllVideo();
 	void CloseAllVideoDisplay();
 	void CloseAllCameraHandle();
 	void CleanAllDisplayWindows();
@@ -54,16 +57,23 @@ public:
 
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
-
     void ChangeSystemMode(int index);
+
+
+	void RefreshUserGroupList();
+	void RefreshUserInfoList();
+
 
     void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
+	void closeEvent(QCloseEvent *event);
 
 public slots:
 	void DealSingleClickedVideoLabel(int chn);
 	void DealDoubleClickedVideoLabel(int chn);
 	void DealAutoPlayAllVideo();
+	void DealStopPlayAllVideo();
+	void DealPlayVideoTimer();
 
 public:
 	Ui::MainMenu ui;

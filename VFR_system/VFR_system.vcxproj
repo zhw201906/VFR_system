@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DisplayUserInfoItem.cpp" />
     <ClCompile Include="DisplayVideoLabel.cpp" />
     <ClCompile Include="DisplayVideoThread.cpp" />
     <ClCompile Include="main.cpp" />
@@ -161,6 +162,7 @@
     <QtMoc Include="VFR_system.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="DisplayUserInfoItem.ui" />
     <QtUic Include="MainMenu.ui" />
     <QtUic Include="VFR_system.ui" />
   </ItemGroup>
@@ -171,6 +173,12 @@
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />
     <QtMoc Include="DisplayVideoThread.h" />
+    <QtMoc Include="DisplayUserInfoItem.h" />
+    <ClInclude Include="inc\VzBoxClientSDK.h" />
+    <ClInclude Include="inc\VzClientSDK.h" />
+    <ClInclude Include="inc\VzClientSDKDefine.h" />
+    <ClInclude Include="inc\VzFaceClientSDK.h" />
+    <ClInclude Include="inc\VzLPRClientSDK.h" />
     <ClInclude Include="sdkHeadFile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

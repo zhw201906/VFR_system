@@ -11,7 +11,7 @@ unsigned int   video_data_size[CAMERA_NUM_LIMIT] = { 0 };   //记录原始数据大小，
 unsigned int   video_chnId[CAMERA_NUM_LIMIT] = { 0 };       //记录相机通道号
 QQueue<QImage> video_frame_cache_[CAMERA_NUM_LIMIT];        //视频缓存
 
-bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
+static bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
 {
 	int yIdx, uIdx, vIdx, idx;
 	int offset = 0;
@@ -51,11 +51,6 @@ void ClearVideoFrameCache()
 	{
 		video_frame_cache_[i].clear();
 		video_data_size[i] = 0;
-		//if (video_data[i] != NULL)
-		//{
-		//	free(video_data[i]);
-		//	video_data[i] = NULL;
-		//}
 	}
 }
 
@@ -65,138 +60,137 @@ MainMenu::MainMenu(QWidget *parent)
 {
 	ui.setupUi(this);
 
-	videoTimer = NULL;
-	vzbox_online_status = false;
-	display_video_windows_num_ = FOUR_WINDOWS;
-	video_display_label = NULL;
-	video_register_finished_ = false;
-
-	ui.toolButton_oneWindow->setEnabled(true);
-	ui.toolButton_fourWindows->setEnabled(false);
-	ui.toolButton_nineWindows->setEnabled(true);
-
-    //初始化显示图标
-    SetIconInit();
-
-	//初始化显示视频窗口label
-	video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
-	if (video_display_label == NULL)
+/**************************************************系统主界面全局初始化********************************************************/
 	{
-		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("视频显示控件初始化失败！"));
-		return;
+		//初始化显示图标
+		SetIconInit();
+
+		//通过按钮切换系统功能
+		connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(0);
+			RefreshVideoDisplayWindow();
+		});
+
+		connect(ui.pushButton_cameraManage, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(1);
+		});
+
+		connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(2);
+			RefreshUserGroupList();
+		});
+
+		connect(ui.pushButton_snapResult, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(3);
+		});
+
+		connect(ui.pushButton_trackPath, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(4);
+		});
+
+		connect(ui.pushButton_smartTest, &QPushButton::clicked, [=]() {
+			ChangeSystemMode(5);
+		});
 	}
-	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+
+
+/**************************************************视频监控界面********************************************************/
 	{
-		video_display_label[i].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-		video_display_label[i].setParent(ui.widget_video_window);
-		video_display_label[i].setChannelId(i);
-		connect(&video_display_label[i], &DisplayVideoLabel::singleClickedMouse, this, &MainMenu::DealSingleClickedVideoLabel);
-		connect(&video_display_label[i], &DisplayVideoLabel::doubleClickedMouse, this, &MainMenu::DealDoubleClickedVideoLabel);
-	}
-
-	//打开设备按钮
-	connect(ui.pushButton_openDev, &QPushButton::clicked, this, &MainMenu::DealOpenVzbox);
-
-	//关闭设备按钮
-	connect(ui.pushButton_closeDev, &QPushButton::clicked, this, &MainMenu::DealCloseVzbox);
-
-	//显示视频窗口
-	RefreshVideoDisplayWindow();
-	//修改窗口显示视频的个数   
-	connect(ui.toolButton_oneWindow, &QPushButton::clicked, [=]() {
-		display_video_windows_num_ = ONE_WINDOWS;
-		RefreshVideoDisplayWindow();
-		ui.toolButton_oneWindow->setEnabled(false);
-		ui.toolButton_fourWindows->setEnabled(true);
-		ui.toolButton_nineWindows->setEnabled(true);
-	});
-	connect(ui.toolButton_fourWindows, &QPushButton::clicked, [=]() {
+		videoTimer = NULL;
+		vzbox_online_status = false;
 		display_video_windows_num_ = FOUR_WINDOWS;
-		RefreshVideoDisplayWindow();
+		video_display_label = NULL;
+
 		ui.toolButton_oneWindow->setEnabled(true);
 		ui.toolButton_fourWindows->setEnabled(false);
 		ui.toolButton_nineWindows->setEnabled(true);
-	});
-	connect(ui.toolButton_nineWindows, &QPushButton::clicked, [=]() {
-		display_video_windows_num_ = NINE_WINDOWS;
-		RefreshVideoDisplayWindow();
-		ui.toolButton_oneWindow->setEnabled(true);
-		ui.toolButton_fourWindows->setEnabled(true);
-		ui.toolButton_nineWindows->setEnabled(false);
-	});
 
-	//一键播放全部视频
-	connect(ui.pushButton_allVideoPlay, &QPushButton::clicked, [=]() {
-        if (!vzbox_online_status)
-        {
-            msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("没有打开的设备！"));
-            return;
-        }
-
-		try 
+		//初始化显示视频窗口label
+		video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
+		if (video_display_label == NULL)
 		{
-			DealAutoPlayAllVideo();
-			video_show_timer_.start(30);
+			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("视频显示控件初始化失败！"));
+			return;
 		}
-		catch (...)
-		{
-			qDebug() << "play failed ";
-		}
-	});
-
-	//播放视频（定时器）
-	connect(&video_show_timer_, &QTimer::timeout, [=]() {
-		QMutexLocker locker(&video_cache_mutex);
 		for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 		{
-			if (video_frame_cache_[i].size() > 0)
-			{
-				QImage img = video_frame_cache_[i].front();
-				video_frame_cache_[i].pop_front();
-
-				try 
-				{
-					if (!img.isNull() && img.width() > video_display_label[i].width() && img.height() > video_display_label[i].height())
-					{						
-						QImage img_show = img.scaled(video_display_label[i].width(), video_display_label[i].height());
-						video_display_label[i].setPixmap(QPixmap::fromImage(img_show));
-					}					
-				}
-				catch (...)
-				{
-					qDebug() << "show image get failed";
-					continue;
-				}				
-			}
+			video_display_label[i].setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+			video_display_label[i].setParent(ui.widget_video_window);
+			video_display_label[i].setChannelId(i);
+			connect(&video_display_label[i], &DisplayVideoLabel::singleClickedMouse, this, &MainMenu::DealSingleClickedVideoLabel);
+			connect(&video_display_label[i], &DisplayVideoLabel::doubleClickedMouse, this, &MainMenu::DealDoubleClickedVideoLabel);
 		}
-	});
 
-    //通过按钮切换系统功能
-    connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(0);
-        RefreshVideoDisplayWindow();
-    });
+		//打开设备按钮
+		connect(ui.pushButton_openDev, &QPushButton::clicked, this, &MainMenu::DealOpenVzbox);
 
-    connect(ui.pushButton_cameraManage, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(1);
-    });
+		//关闭设备按钮
+		connect(ui.pushButton_closeDev, &QPushButton::clicked, this, &MainMenu::DealCloseVzbox);
 
-    connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(2);
-    });
+		//显示视频窗口
+		RefreshVideoDisplayWindow();
 
-    connect(ui.pushButton_snapResult, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(3);
-    });
+		//修改窗口显示视频的个数   
+		connect(ui.toolButton_oneWindow, &QPushButton::clicked, [=]() {
+			display_video_windows_num_ = ONE_WINDOWS;
+			RefreshVideoDisplayWindow();
+			ui.toolButton_oneWindow->setEnabled(false);
+			ui.toolButton_fourWindows->setEnabled(true);
+			ui.toolButton_nineWindows->setEnabled(true);
+		});
+		connect(ui.toolButton_fourWindows, &QPushButton::clicked, [=]() {
+			display_video_windows_num_ = FOUR_WINDOWS;
+			RefreshVideoDisplayWindow();
+			ui.toolButton_oneWindow->setEnabled(true);
+			ui.toolButton_fourWindows->setEnabled(false);
+			ui.toolButton_nineWindows->setEnabled(true);
+		});
+		connect(ui.toolButton_nineWindows, &QPushButton::clicked, [=]() {
+			display_video_windows_num_ = NINE_WINDOWS;
+			RefreshVideoDisplayWindow();
+			ui.toolButton_oneWindow->setEnabled(true);
+			ui.toolButton_fourWindows->setEnabled(true);
+			ui.toolButton_nineWindows->setEnabled(false);
+		});
 
-    connect(ui.pushButton_trackPath, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(4);
-    });
+		//一键播放全部视频
+		connect(ui.pushButton_allVideoPlay, &QPushButton::clicked, this, &MainMenu::DealAutoPlayAllVideo);
 
-    connect(ui.pushButton_smartTest, &QPushButton::clicked, [=]() {
-        ChangeSystemMode(5);
-    });
+		//停止播放的全部视频
+		connect(ui.pushButton_allVideoStop, &QPushButton::clicked, this, &MainMenu::DealStopPlayAllVideo);
 
+		//播放视频（定时器）
+		connect(&video_show_timer_, &QTimer::timeout, this, &MainMenu::DealPlayVideoTimer);
+	}
+    
+/**************************************************相机配置界面********************************************************/
+	{
+		ui.listWidget_userInfoList->setViewMode(QListView::IconMode);
+		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
+		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
+
+		
+	}
+
+/***************************************************人脸库界面********************************************************/
+	{
+
+	}
+
+/**************************************************抓拍查询界面********************************************************/
+	{
+
+	}
+
+/**************************************************轨迹查看界面********************************************************/
+	{
+
+	}
+
+/**************************************************智能测试界面********************************************************/
+	{
+
+	}
 }
 
 MainMenu::~MainMenu()
@@ -208,7 +202,6 @@ MainMenu::~MainMenu()
 	}
 	
 	VzLPRClient_Close(vzbox_handle_);
-	//VzLPRClient_Close(camera_handle_);
 	VzLPRClient_Cleanup();
 	if (video_display_label != NULL)
 	{
@@ -362,6 +355,37 @@ void MainMenu::RefreshVideoDisplayStyle()
 	}
 }
 
+//播放已挂载的全部相机的视频
+void MainMenu::AutoPlayAllVideo()
+{
+	int video_num = 0;
+	QVector<QString>::iterator it = camera_list_buff.begin();
+	while (it != camera_list_buff.end() && video_num < CAMERA_NUM_LIMIT)
+	{
+		camera_handle_[video_num] = VzLPRClient_Open((*it).toUtf8(), 80, "admin", "admin");
+		if (camera_handle_[video_num] == 0)
+		{
+			qDebug() << "open camera " << *it << "failed,video ID:" << video_num;
+			it++;
+			video_num++;
+			continue;
+		}
+		qDebug() << "open camera " << *it << "success, video ID:" << video_num;
+
+		it++;
+		video_num++;
+	}
+
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		if (camera_handle_[i] != 0)
+		{
+			video_chnId[i] = i;
+			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], MainMenu::VideoFrameCallBack, (void *)&video_chnId[i]);
+		}
+	}
+}
+
 //关闭所有显示的视频
 void MainMenu::CloseAllVideoDisplay()
 {
@@ -376,10 +400,10 @@ void MainMenu::CloseAllCameraHandle()
 	{
 		if (camera_handle_[i] != 0)
 		{			
-			VzLPRClient_StopRealPlay(camera_handle_[i]);
-			VzLPRClient_StopRealPlayByChannel_V2(camera_handle_[i]);
+			qDebug() << "close camera handle:" << i;
+			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], NULL, NULL);
 			VzLPRClient_Close(camera_handle_[i]);
-
+			camera_handle_[i] = 0;
 		}
 	}
 }
@@ -491,8 +515,9 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
 {
 	int* chnnal_id = (int *)pUserData;
-	qDebug() << "static VideoFrameCallBack chnnal:" << *chnnal_id;
+	//qDebug() << "static VideoFrameCallBack chnnal:" << *chnnal_id;
 
+	//为frame分配空间
 	if (video_data[*chnnal_id] == NULL)
 	{
 		qDebug() << "malloc chnnalId:" << *chnnal_id;
@@ -502,7 +527,7 @@ void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, co
 	}
 	else
 	{
-		if (video_data_size[*chnnal_id] != pFrame->height * pFrame->width * 3)
+		if (video_data_size[*chnnal_id] != pFrame->height * pFrame->width * 3)  //防止frame_size变化导致的程序崩溃
 		{
 			//qDebug() << "----->" << "image data size have changed" << *chnnal_id;
 			free(video_data[*chnnal_id]);
@@ -538,6 +563,29 @@ void MainMenu::ChangeSystemMode(int index)
     ui.stackedWidget_systemMode->setCurrentIndex(index);
 }
 
+//刷新人脸库列表
+void MainMenu::RefreshUserGroupList()
+{
+	if (!vzbox_online_status)
+		return;
+
+	VZ_FACE_LIB_RESULT face_lib_list;
+	int ret = VzClient_SearchFaceRecgLib(vzbox_handle_, &face_lib_list);
+	if (ret == VZSDK_SUCCESS)
+	{
+		qDebug() << "get face library sucess,count:" << face_lib_list.lib_count;
+		for (int i = 0; i < MAX_FACE_LIB_COUNT; i++)
+		{
+			qDebug() << "lib " << i << ":" << QString::fromLocal8Bit(face_lib_list.lib_items[i].name);
+		}
+	}
+}
+
+//刷新用户信息列表
+void MainMenu::RefreshUserInfoList()
+{
+}
+
 //绘制系统背景
 void MainMenu::paintEvent(QPaintEvent * event)
 {
@@ -552,6 +600,12 @@ void MainMenu::paintEvent(QPaintEvent * event)
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
 	RefreshVideoDisplayWindow();
+}
+
+//关闭系统主窗口
+void MainMenu::closeEvent(QCloseEvent * event)
+{
+
 }
 
 //处理鼠标单击视频窗口
@@ -571,30 +625,64 @@ void MainMenu::DealDoubleClickedVideoLabel(int chn)
 //一键播放全部视频
 void MainMenu::DealAutoPlayAllVideo()
 {
-	int video_num = 0;
-	QVector<QString>::iterator it = camera_list_buff.begin();
-	while (it != camera_list_buff.end() && video_num < CAMERA_NUM_LIMIT)
+	if (!vzbox_online_status)
 	{
-		camera_handle_[video_num] = VzLPRClient_Open((*it).toUtf8(),80,"admin","admin");
-		if (camera_handle_[video_num] == 0)
-		{
-			qDebug() << "open camera " << *it << "failed,video ID:" << video_num;
-			it++;
-			video_num++;
-			continue;
-		}
-		qDebug() << "open camera " << *it << "success, video ID:" << video_num;
-		
-		it++;
-		video_num++;
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("没有打开的设备！"));
+		return;
 	}
 
+	try
+	{
+		AutoPlayAllVideo();
+		video_show_timer_.start((int)(1000.0/VIDEO_FRAME_RATE));
+	}
+	catch (...)
+	{
+		qDebug() << "auto play all_video failed ";
+	}
+}
+
+//停止播放的视频，但不关闭已打开的相机
+void MainMenu::DealStopPlayAllVideo()
+{
 	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
 	{
 		if (camera_handle_[i] != 0)
 		{
-			video_chnId[i] = i;
-			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], MainMenu::VideoFrameCallBack, (void *)&video_chnId[i]);
+			qDebug() << "stop camera handle:" << i;
+			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], NULL, NULL);
+		}
+	}
+}
+
+//通过定时器软中断，显示相机视频
+void MainMenu::DealPlayVideoTimer()
+{	
+	for (int i = 0; i < CAMERA_NUM_LIMIT; i++)
+	{
+		if (video_frame_cache_[i].size() > 0)
+		{
+			QImage img;
+			{
+				QMutexLocker locker(&video_cache_mutex);
+				img = video_frame_cache_[i].front();
+				video_frame_cache_[i].pop_front();
+			}
+
+			try
+			{
+				if (!img.isNull() && img.width() > video_display_label[i].width() && img.height() > video_display_label[i].height())
+				{
+					QImage img_show = img.scaled(video_display_label[i].width(), video_display_label[i].height());
+					if(!img_show.isNull())
+						video_display_label[i].setPixmap(QPixmap::fromImage(img_show));
+				}
+			}
+			catch (...)
+			{
+				qDebug() << "chnnal image get failed" << i;
+				continue;
+			}
 		}
 	}
 }
