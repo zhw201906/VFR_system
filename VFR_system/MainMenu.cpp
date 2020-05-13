@@ -78,6 +78,7 @@ MainMenu::MainMenu(QWidget *parent)
 		connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(2);
 			RefreshUserGroupList();
+			RefreshUserInfoList();
 		});
 
 		connect(ui.pushButton_snapResult, &QPushButton::clicked, [=]() {
@@ -168,7 +169,7 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.listWidget_userInfoList->setViewMode(QListView::IconMode);
 		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
 		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
-
+		puser_info_item = NULL;
 		
 	}
 
@@ -527,7 +528,7 @@ void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, co
 	}
 	else
 	{
-		if (video_data_size[*chnnal_id] != pFrame->height * pFrame->width * 3)  //防止frame_size变化导致的程序崩溃
+		if (video_data_size[*chnnal_id] != pFrame->height * pFrame->width * 3)  //重新验证分配的空间，防止frame_size变化导致的程序崩溃
 		{
 			//qDebug() << "----->" << "image data size have changed" << *chnnal_id;
 			free(video_data[*chnnal_id]);
@@ -584,6 +585,48 @@ void MainMenu::RefreshUserGroupList()
 //刷新用户信息列表
 void MainMenu::RefreshUserInfoList()
 {
+	VZ_FACE_USER_RESULT user_face_info;
+	VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
+	condition.page_num = 1;
+	condition.page_count = 25;
+
+	int ret = VzClient_SearchFaceRecgUser(vzbox_handle_, &condition, 1, &user_face_info);
+	if (ret == VZSDK_SUCCESS)
+	{
+		qDebug() << "get face info sucess, count:" << user_face_info.face_count << "  total count:" << user_face_info.total_count;
+		for (int i = 0; i < user_face_info.face_count; i++)
+		{
+			qDebug() << "user image size:" << user_face_info.face_items[i].pic_len << "data:" << user_face_info.face_items[i].img_url;
+
+			//if (pimage != NULL)
+			if (user_face_info.face_items[i].pic_len > 0)
+			{
+				char img_path[100] = { 0 };
+				//char *pimage = (char*)malloc(user_face_info.face_items[i].pic_len);
+				//memcpy(pimage, user_face_info.face_items[i].pic_data, user_face_info.face_items[i].pic_len);
+				
+				sprintf(img_path, "image_cache\\user_img_%d.jpg", i);
+				qDebug() << img_path;
+				FILE *fimage = fopen(img_path, "wb");
+				if (!fimage)
+				{
+					fwrite(user_face_info.face_items[i].pic_data, 1,user_face_info.face_items[i].pic_len, fimage);
+					fclose(fimage);
+				}				
+				//free(pimage);
+			}
+			
+			//puser_info_item = new DisplayUserInfoItem[user_face_info.total_count];
+			qDebug() << "user " << i << ":" << QString::fromLocal8Bit(user_face_info.face_items[i].user_name);
+
+		}
+		ui.label_totalUserInfo->clear();
+		ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共 %1 条记录").arg(user_face_info.total_count));
+	}
+	else
+	{
+		qDebug() << "get face info failed"<<ret;
+	}
 }
 
 //绘制系统背景
