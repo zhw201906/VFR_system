@@ -166,15 +166,20 @@ MainMenu::MainMenu(QWidget *parent)
     
 /**************************************************相机配置界面********************************************************/
 	{
-		ui.listWidget_userInfoList->setViewMode(QListView::IconMode);
-		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
-		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
-		puser_info_item = NULL;
+		
 		
 	}
 
 /***************************************************人脸库界面********************************************************/
 	{
+		ui.listWidget_userInfoList->setViewMode(QListView::IconMode);
+		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
+		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
+
+		p_user_info_item = NULL;
+		p_user_list_item = NULL;
+		p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
+		p_user_list_item = new QListWidgetItem[PAGE_USERINFO_NUM];
 
 	}
 
@@ -585,6 +590,10 @@ void MainMenu::RefreshUserGroupList()
 //刷新用户信息列表
 void MainMenu::RefreshUserInfoList()
 {
+	if (!vzbox_online_status)
+		return;
+
+	ui.listWidget_userInfoList ->clear();
 	VZ_FACE_USER_RESULT user_face_info;
 	VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
 	condition.page_num = 1;
@@ -593,27 +602,37 @@ void MainMenu::RefreshUserInfoList()
 	int ret = VzClient_SearchFaceRecgUser(vzbox_handle_, &condition, 1, &user_face_info);
 	if (ret == VZSDK_SUCCESS)
 	{
+		QImage  img("D:/vz_box/guan.jpg");
+		if (!img.isNull())
+			qDebug() << "image is null";
+
 		qDebug() << "get face info sucess, count:" << user_face_info.face_count << "  total count:" << user_face_info.total_count;
 		for (int i = 0; i < user_face_info.face_count; i++)
 		{
 			qDebug() << "user image size:" << user_face_info.face_items[i].pic_len << "data:" << user_face_info.face_items[i].img_url;
 
+			p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(user_face_info.face_items[i].user_name), img);
+			p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
+
+			ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
+			ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
+
 			//if (pimage != NULL)
 			if (user_face_info.face_items[i].pic_len > 0)
 			{
-				char img_path[100] = { 0 };
+				//char img_path[100] = { 0 };
 				//char *pimage = (char*)malloc(user_face_info.face_items[i].pic_len);
 				//memcpy(pimage, user_face_info.face_items[i].pic_data, user_face_info.face_items[i].pic_len);
 				
-				sprintf(img_path, "image_cache\\user_img_%d.jpg", i);
-				qDebug() << img_path;
-				FILE *fimage = fopen(img_path, "wb");
-				if (!fimage)
-				{
-					fwrite(user_face_info.face_items[i].pic_data, 1,user_face_info.face_items[i].pic_len, fimage);
-					fclose(fimage);
-				}				
-				//free(pimage);
+				//sprintf(img_path, "image_cache\\user_img_%d.jpg", i);
+				//qDebug() << img_path;
+				//FILE *fimage = fopen(img_path, "wb");
+				//if (!fimage)
+				//{
+				//	fwrite(user_face_info.face_items[i].pic_data, 1,user_face_info.face_items[i].pic_len, fimage);
+				//	fclose(fimage);
+				//}				
+				////free(pimage);
 			}
 			
 			//puser_info_item = new DisplayUserInfoItem[user_face_info.total_count];

@@ -12,8 +12,10 @@ class DisplayUserInfoItem : public QWidget
 
 public:
 	DisplayUserInfoItem(QWidget *parent = Q_NULLPTR);
-	DisplayUserInfoItem(QString userName,QImage userImage);
+	DisplayUserInfoItem(QString userName,QImage &userImage);
 	~DisplayUserInfoItem();
+
+	void  SetDisplayItemInfo(QString userName, QImage &userImage);
 
 signals:
 	void  EditUserInfoSignal();

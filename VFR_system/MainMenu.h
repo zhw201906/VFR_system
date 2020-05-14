@@ -20,6 +20,9 @@
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
 
+#define  PAGE_USERINFO_NUM     50
+#define  USERINFO_ITEM_SIZE    QSize(198, 261)
+
 #define  VIDEO_FRAME_RATE      25
 #define  ONE_WINDOWS    1
 #define  FOUR_WINDOWS   2
@@ -110,8 +113,8 @@ public:
 	bool    video_register_finished_;
 	int     video_index_;
 
-	DisplayUserInfoItem *puser_info_item;
-
+	DisplayUserInfoItem *p_user_info_item;
+	QListWidgetItem     *p_user_list_item;
 private:
 	QMutex  get_frame_mutex_; 
 
