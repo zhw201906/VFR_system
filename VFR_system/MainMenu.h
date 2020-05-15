@@ -20,8 +20,8 @@
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
 
-#define  PAGE_USERINFO_NUM     50
-#define  USERINFO_ITEM_SIZE    QSize(198, 261)
+#define  PAGE_USERINFO_NUM     25
+#define  USERINFO_ITEM_SIZE    QSize(195, 245)
 
 #define  VIDEO_FRAME_RATE      25
 #define  ONE_WINDOWS    1
@@ -77,6 +77,8 @@ public:
 	void RefreshUserGroupList();
 	void RefreshUserInfoList();
 
+	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
+
 
     void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
@@ -115,6 +117,11 @@ public:
 
 	DisplayUserInfoItem *p_user_info_item;
 	QListWidgetItem     *p_user_list_item;
+	int                  group_cur_id_;
+	int                  user_list_cur_page_num_;
+	int                  user_list_cur_page_total_;
+	VZ_FACE_USER_RESULT  cur_group_toal_user_info_;
+
 private:
 	QMutex  get_frame_mutex_; 
 

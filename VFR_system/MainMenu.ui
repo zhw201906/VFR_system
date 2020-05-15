@@ -1149,7 +1149,7 @@
               <widget class="QLabel" name="label_totalUserInfo">
                <property name="minimumSize">
                 <size>
-                 <width>200</width>
+                 <width>400</width>
                  <height>20</height>
                 </size>
                </property>
@@ -1172,6 +1172,19 @@
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_22">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item>
               <widget class="QPushButton" name="pushButton_userListHead">

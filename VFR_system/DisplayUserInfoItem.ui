@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>198</width>
-    <height>261</height>
+    <height>246</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>198</width>
-    <height>261</height>
+    <width>0</width>
+    <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -31,13 +31,13 @@
      <property name="minimumSize">
       <size>
        <width>180</width>
-       <height>210</height>
+       <height>200</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>180</width>
-       <height>210</height>
+       <height>200</height>
       </size>
      </property>
      <property name="frameShape">
@@ -45,6 +45,9 @@
      </property>
      <property name="text">
       <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -64,7 +67,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="10,0,0">
       <property name="spacing">
-       <number>3</number>
+       <number>2</number>
       </property>
       <property name="leftMargin">
        <number>0</number>
@@ -95,14 +98,14 @@
        <widget class="QToolButton" name="toolButton_edit">
         <property name="minimumSize">
          <size>
-          <width>25</width>
-          <height>25</height>
+          <width>20</width>
+          <height>20</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>25</width>
-          <height>25</height>
+          <width>20</width>
+          <height>20</height>
          </size>
         </property>
         <property name="text">
@@ -114,8 +117,8 @@
         </property>
         <property name="iconSize">
          <size>
-          <width>20</width>
-          <height>20</height>
+          <width>16</width>
+          <height>16</height>
          </size>
         </property>
        </widget>
@@ -124,14 +127,14 @@
        <widget class="QToolButton" name="toolButton_del">
         <property name="minimumSize">
          <size>
-          <width>25</width>
-          <height>25</height>
+          <width>20</width>
+          <height>20</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>25</width>
-          <height>25</height>
+          <width>20</width>
+          <height>20</height>
          </size>
         </property>
         <property name="text">
@@ -143,8 +146,8 @@
         </property>
         <property name="iconSize">
          <size>
-          <width>20</width>
-          <height>20</height>
+          <width>16</width>
+          <height>16</height>
          </size>
         </property>
        </widget>

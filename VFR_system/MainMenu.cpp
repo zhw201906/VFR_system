@@ -181,6 +181,23 @@ MainMenu::MainMenu(QWidget *parent)
 		p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
 		p_user_list_item = new QListWidgetItem[PAGE_USERINFO_NUM];
 
+		group_cur_id_ = 1;
+		user_list_cur_page_num_ = 1;
+		connect(ui.pushButton_userListNext, &QPushButton::clicked, [=]() {
+			if (user_list_cur_page_total_ > user_list_cur_page_num_)
+			{
+				user_list_cur_page_num_++;
+				DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
+			}
+		});
+
+		connect(ui.pushButton_userListLast, &QPushButton::clicked, [=]() {
+			if (1 < user_list_cur_page_num_)
+			{
+				user_list_cur_page_num_--;
+				DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
+			}
+		});
 	}
 
 /**************************************************抓拍查询界面********************************************************/
@@ -593,8 +610,9 @@ void MainMenu::RefreshUserInfoList()
 	if (!vzbox_online_status)
 		return;
 
-	ui.listWidget_userInfoList ->clear();
-	VZ_FACE_USER_RESULT user_face_info;
+	//ui.listWidget_userInfoList->clear();
+	DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
+	/*VZ_FACE_USER_RESULT user_face_info;
 	VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
 	condition.page_num = 1;
 	condition.page_count = 25;
@@ -602,42 +620,34 @@ void MainMenu::RefreshUserInfoList()
 	int ret = VzClient_SearchFaceRecgUser(vzbox_handle_, &condition, 1, &user_face_info);
 	if (ret == VZSDK_SUCCESS)
 	{
-		QImage  img("D:/vz_box/guan.jpg");
-		if (!img.isNull())
-			qDebug() << "image is null";
-
+		QImage  img;
 		qDebug() << "get face info sucess, count:" << user_face_info.face_count << "  total count:" << user_face_info.total_count;
 		for (int i = 0; i < user_face_info.face_count; i++)
 		{
-			qDebug() << "user image size:" << user_face_info.face_items[i].pic_len << "data:" << user_face_info.face_items[i].img_url;
-
+			char face_path[100] = { 0 };
+			sprintf(face_path, "faceImageCache/%d.jpg", user_face_info.face_items[i].pic_index);
+			FILE *face_data = fopen(face_path, "wb+");
+			if (face_data)
+			{
+				int pFaceSize = 1024 * 1024;
+				char *pFacedata = (char*)malloc(pFaceSize);
+				memset(pFacedata, 0, pFaceSize);
+				int ret = VzClient_LoadFaceImageByPath(vzbox_handle_, user_face_info.face_items[i].img_url, pFacedata, &pFaceSize);
+				if (ret == VZSDK_SUCCESS)
+				{
+					fwrite(pFacedata, 1, pFaceSize, face_data);
+				}
+				free(pFacedata);
+				fclose(face_data);
+				img.load(face_path);
+				if (!img.isNull())
+					qDebug() << "image is null";
+			}
 			p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(user_face_info.face_items[i].user_name), img);
 			p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
 
 			ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
 			ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
-
-			//if (pimage != NULL)
-			if (user_face_info.face_items[i].pic_len > 0)
-			{
-				//char img_path[100] = { 0 };
-				//char *pimage = (char*)malloc(user_face_info.face_items[i].pic_len);
-				//memcpy(pimage, user_face_info.face_items[i].pic_data, user_face_info.face_items[i].pic_len);
-				
-				//sprintf(img_path, "image_cache\\user_img_%d.jpg", i);
-				//qDebug() << img_path;
-				//FILE *fimage = fopen(img_path, "wb");
-				//if (!fimage)
-				//{
-				//	fwrite(user_face_info.face_items[i].pic_data, 1,user_face_info.face_items[i].pic_len, fimage);
-				//	fclose(fimage);
-				//}				
-				////free(pimage);
-			}
-			
-			//puser_info_item = new DisplayUserInfoItem[user_face_info.total_count];
-			qDebug() << "user " << i << ":" << QString::fromLocal8Bit(user_face_info.face_items[i].user_name);
-
 		}
 		ui.label_totalUserInfo->clear();
 		ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共 %1 条记录").arg(user_face_info.total_count));
@@ -645,7 +655,70 @@ void MainMenu::RefreshUserInfoList()
 	else
 	{
 		qDebug() << "get face info failed"<<ret;
+	}*/
+}
+
+void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
+{
+	VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
+	condition.page_num = page_num;
+	condition.page_count = PAGE_USERINFO_NUM;
+
+	cur_group_toal_user_info_ = { 0 };
+	int ret = VzClient_SearchFaceRecgUser(vzbox_handle_, &condition, group_id, &cur_group_toal_user_info_);
+	if (ret != VZSDK_SUCCESS)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("获取用户信息失败！"));
+		return;
 	}
+
+	qDebug() << "All user:" << cur_group_toal_user_info_.total_count;
+	//ui.listWidget_userInfoList->clear();
+	for (int i = 0; i < cur_group_toal_user_info_.face_count; i++)
+	{
+		QImage img;
+		char face_path[100] = { 0 };
+		sprintf(face_path, "faceImageCache/%d.jpg", cur_group_toal_user_info_.face_items[i].pic_index);
+		FILE *face_data = fopen(face_path, "wb+");
+		if (face_data)
+		{
+			int pFaceSize = 1024 * 1024;
+			char *pFacedata = (char*)malloc(pFaceSize);
+			memset(pFacedata, 0, pFaceSize);
+			int ret = VzClient_LoadFaceImageByPath(vzbox_handle_, cur_group_toal_user_info_.face_items[i].img_url, pFacedata, &pFaceSize);
+			if (ret != VZSDK_SUCCESS)
+			{
+				fclose(face_data);
+				free(pFacedata);
+			}
+			else
+			{
+				fwrite(pFacedata, sizeof(char), pFaceSize, face_data);				
+				fclose(face_data);
+				free(pFacedata);
+				img.load(face_path);
+			}		
+		}
+		p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
+		p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
+
+		ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
+		ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
+	}
+
+	if (cur_group_toal_user_info_.total_count % PAGE_USERINFO_NUM)
+	{
+		user_list_cur_page_total_ = cur_group_toal_user_info_.total_count / PAGE_USERINFO_NUM + 1;
+	}
+	else
+	{
+		user_list_cur_page_total_ = cur_group_toal_user_info_.total_count / PAGE_USERINFO_NUM;
+	}
+	
+	ui.label_totalUserInfo->clear();
+	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共%2 页     %1 条记录    当前 %3 页").arg(cur_group_toal_user_info_.total_count)
+									.arg(user_list_cur_page_total_).arg(user_list_cur_page_num_));
+
 }
 
 //绘制系统背景
