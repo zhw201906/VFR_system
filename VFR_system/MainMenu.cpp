@@ -24,7 +24,7 @@ static bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* p
 			uIdx = (i / 4)* width + j / 2;
 
 			int R = (pY[yIdx] - 16) + 1.370805 * (pV[uIdx] - 128);                                                     // r分量	
-			int G = (pY[yIdx] - 16) - 0.69825 * (pV[uIdx] - 128) - 0.33557 * (pU[vIdx] - 128);                         // g分量
+			int G = (pY[yIdx] - 16) - 0.69825  * (pV[uIdx] - 128) - 0.33557 * (pU[vIdx] - 128);                        // g分量
 			int B = (pY[yIdx] - 16) + 1.733221 * (pU[vIdx] - 128);                                                     // b分量
 
 			R = R < 255 ? R : 255;
@@ -64,6 +64,7 @@ MainMenu::MainMenu(QWidget *parent)
 	{
 		//初始化显示图标
 		SetIconInit();
+		ChangeSystemMode(0);
 
 		//通过按钮切换系统功能
 		connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
@@ -405,6 +406,7 @@ void MainMenu::AutoPlayAllVideo()
 		{
 			video_chnId[i] = i;
 			VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], MainMenu::VideoFrameCallBack, (void *)&video_chnId[i]);
+			//VzLPRClient_SetVideoFrameCallBack(camera_handle_[i], MainMenu::CameraFrameCallBack, (void *)&video_display_label[i]);
 		}
 	}
 }
@@ -578,6 +580,28 @@ void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, co
 			video_frame_cache_[*chnnal_id].push_back(video_image);
 		}
 	}
+}
+
+void MainMenu::CameraFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
+{
+	DisplayVideoLabel* video_label = (DisplayVideoLabel *)pUserData;
+	//qDebug() << "static VideoFrameCallBack chnnal:" << *chnnal_id;
+
+	//为frame分配空间
+	int frame_size = pFrame->height * pFrame->width * 3;
+	unsigned char *frame_data = (unsigned char *)malloc(frame_size);
+	memset(frame_data, 0, frame_size);
+
+	//qDebug() << "camera chnnal:"<< &video_label <<" callback address:" << &pFrame;
+	if (YUV420ToBGR24(pFrame->pY, pFrame->pU, pFrame->pV, frame_data, pFrame->width, pFrame->height))
+	{
+		QMutexLocker locker(&video_cache_mutex);
+		QImage frame_image = QImage(frame_data, pFrame->width, pFrame->height, pFrame->width * 3, QImage::Format_RGB888);
+		video_label->setDisplayImage(frame_image);
+		//video_label->setPixmap(QPixmap::fromImage(frame_image.scaled(video_label->width(), video_label->height())));
+	}
+	if (frame_data)
+		free(frame_data);
 }
 
 //切换系统功能模式（通过索引切换）

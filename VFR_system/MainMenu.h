@@ -70,6 +70,7 @@ public:
 	void ChangeOneVideoStyle(int chnId);
 
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
+	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
     void ChangeSystemMode(int index);
 

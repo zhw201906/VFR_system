@@ -2,6 +2,10 @@
 
 #include <QWidget>
 #include <QLabel>
+#include <QPainter>
+#include <QImage>
+#include <QRect>
+#include <QDebug>
 
 class DisplayVideoLabel : public QLabel
 {
@@ -17,9 +21,13 @@ public:
 	~DisplayVideoLabel();
 
 	void  setChannelId(int chn);
+	void  setDisplayImage(QImage &src);
 	void  mousePressEvent(QMouseEvent *);
 	void  mouseDoubleClickEvent(QMouseEvent *);
 
+	//void  paintEvent(QPaintEvent *event);
+
 private:
 	int  chnId;
+	QImage dis_image;
 };
