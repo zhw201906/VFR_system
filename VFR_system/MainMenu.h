@@ -11,11 +11,13 @@
 #include <QMutexLocker>
 #include <functional> 
 #include <QImage>
+#include <QFileDialog>
 
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
 #include "DisplayVideoThread.h"
 #include "DisplayUserInfoItem.h"
+#include "face_operation.h"
 
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
@@ -31,6 +33,7 @@
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
 #define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
 
+#define  OPEN_IMAGE_DIR   "./faceImageCache"
 
 typedef struct user_group_info {
 
@@ -81,6 +84,15 @@ public:
 	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
 
 
+    void CreateAItestEngine();
+    void LoadCompareImg1();
+    void LoadCompareImg2();
+    void DealFaceCompare();
+    void LoadDetectImg();
+    void DealFaceDetect();
+    void LoadRecognizeImg();
+    void DealFaceRecognize();
+
     void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
@@ -91,6 +103,7 @@ public slots:
 	void DealAutoPlayAllVideo();
 	void DealStopPlayAllVideo();
 	void DealPlayVideoTimer();
+
 
 public:
 	Ui::MainMenu ui;
@@ -125,7 +138,14 @@ public:
 
 private:
 	QMutex  get_frame_mutex_; 
+    FaceEngineClass *pFaceEngine;
+    QString comparePath1;
+    QString comparePath2;
+    QString detectPath;
+    QString recognizePath;
 
+    cv::Mat detectImage;
+    cv::Mat recognizeImage;
 
 };
 

@@ -61,11 +61,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>./inc;$(IncludePath)</IncludePath>
+    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;$(IncludePath)</IncludePath>
     <IntDir>..\obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>./inc;$(IncludePath)</IncludePath>
+    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;$(IncludePath)</IncludePath>
     <IntDir>..\obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
@@ -102,8 +102,8 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>./SDK/SDK_64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>VzLPRSDK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./SDK/SDK_64/lib;./third_lib/vz_SDK/SDK_64/lib;./third_lib/hr_SDK/lib;./third_lib/opencv/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>VzLPRSDK.lib;libarcsoft_face_engine.lib;opencv_core249d.lib;opencv_highgui249d.lib;opencv_imgproc249d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -132,8 +132,8 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>./SDK/SDK_64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>VzLPRSDK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./SDK/SDK_64/lib;./third_lib/vz_SDK/SDK_64/lib;./third_lib/hr_SDK/lib;./third_lib/opencv/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>VzLPRSDK.lib;libarcsoft_face_engine.lib;opencv_core249.lib;opencv_highgui249.lib;opencv_imgproc249.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -156,6 +156,7 @@
     <ClCompile Include="DisplayVideoThread.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="src\facefunction\face_operation.cpp" />
     <ClCompile Include="VFR_system.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -170,6 +171,7 @@
     <QtRcc Include="VFR_system.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\facefunction\face_operation.h" />
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />
     <QtMoc Include="DisplayVideoThread.h" />

@@ -46,6 +46,9 @@
     <ClCompile Include="DisplayUserInfoItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\facefunction\face_operation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -98,6 +101,9 @@
     </ClInclude>
     <ClInclude Include="inc\VzLPRClientSDK.h">
       <Filter>Third Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\facefunction\face_operation.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

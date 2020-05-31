@@ -104,7 +104,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
      <property name="currentIndex">
-      <number>5</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="onlineMonitoring">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -136,8 +136,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>1039</width>
-                  <height>95</height>
+                  <width>16</width>
+                  <height>16</height>
                  </rect>
                 </property>
                </widget>
@@ -682,8 +682,11 @@
                  <widget class="QLabel" name="label_17">
                   <property name="font">
                    <font>
-                    <family>04b_21</family>
+                    <family>华文宋体</family>
                     <pointsize>11</pointsize>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                    <kerning>true</kerning>
                    </font>
                   </property>
                   <property name="text">
@@ -708,6 +711,11 @@
                <layout class="QHBoxLayout" name="horizontalLayout_22">
                 <item>
                  <widget class="QCheckBox" name="checkBox_2">
+                  <property name="font">
+                   <font>
+                    <pointsize>11</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>输出人脸属性</string>
                   </property>
@@ -727,6 +735,11 @@
                <layout class="QHBoxLayout" name="horizontalLayout_23">
                 <item>
                  <widget class="QCheckBox" name="checkBox">
+                  <property name="font">
+                   <font>
+                    <pointsize>11</pointsize>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>人脸抓拍</string>
                   </property>
@@ -842,7 +855,23 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="comboBox_2"/>
+                 <widget class="QComboBox" name="comboBox_2">
+                  <item>
+                   <property name="text">
+                    <string>100%</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>75%</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>50%</string>
+                   </property>
+                  </item>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -1356,7 +1385,42 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_17">
           <item>
-           <spacer name="horizontalSpacer_24">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>起始时间：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDateTimeEdit" name="dateTimeEdit_beginTime">
+            <property name="time">
+             <time>
+              <hour>0</hour>
+              <minute>0</minute>
+              <second>0</second>
+             </time>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_23">
+            <property name="text">
+             <string>至</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDateTimeEdit" name="dateTimeEdit_endTime">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_26">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -1367,26 +1431,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_22">
-            <property name="text">
-             <string>起始时间：</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDateTimeEdit" name="dateTimeEdit"/>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_23">
-            <property name="text">
-             <string>至</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDateTimeEdit" name="dateTimeEdit_2"/>
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit_4"/>
@@ -1591,7 +1635,7 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <item>
-              <widget class="QLabel" name="label">
+              <widget class="QLabel" name="label_compareImage1">
                <property name="minimumSize">
                 <size>
                  <width>160</width>
@@ -1635,7 +1679,7 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
-              <widget class="QLabel" name="label_6">
+              <widget class="QLabel" name="label_compareImage2">
                <property name="minimumSize">
                 <size>
                  <width>160</width>
@@ -1842,7 +1886,7 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_10">
              <item>
-              <widget class="QLabel" name="label_9">
+              <widget class="QLabel" name="label_detectImage">
                <property name="minimumSize">
                 <size>
                  <width>160</width>
@@ -1891,6 +1935,12 @@
           </item>
           <item row="2" column="0" colspan="3">
            <widget class="QLabel" name="label_10">
+            <property name="font">
+             <font>
+              <family>04b_21</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>人脸检测结果</string>
             </property>
@@ -1900,12 +1950,13 @@
            </widget>
           </item>
           <item row="3" column="0" colspan="3">
-           <widget class="QTreeWidget" name="treeWidget">
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
+           <widget class="QTreeWidget" name="treeWidget_detectResult">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>340</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item row="4" column="0" colspan="3">
@@ -1992,7 +2043,7 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
              <item>
-              <widget class="QLabel" name="label_11">
+              <widget class="QLabel" name="label_recognizeImage">
                <property name="minimumSize">
                 <size>
                  <width>160</width>
@@ -2041,6 +2092,12 @@
           </item>
           <item row="2" column="0" colspan="3">
            <widget class="QLabel" name="label_12">
+            <property name="font">
+             <font>
+              <family>04b_21</family>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>人脸识别结果</string>
             </property>
@@ -2050,12 +2107,13 @@
            </widget>
           </item>
           <item row="3" column="0" colspan="3">
-           <widget class="QTreeWidget" name="treeWidget_2">
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
+           <widget class="QTreeWidget" name="treeWidget_recognizeResult">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>340</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item row="4" column="0" colspan="3">

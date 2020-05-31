@@ -11,6 +11,28 @@ unsigned int   video_data_size[CAMERA_NUM_LIMIT] = { 0 };   //记录原始数据大小，
 unsigned int   video_chnId[CAMERA_NUM_LIMIT] = { 0 };       //记录相机通道号
 QQueue<QImage> video_frame_cache_[CAMERA_NUM_LIMIT];        //视频缓存
 
+//等比缩放图像
+//参数1：图像路径（IN）
+//参数2：空间宽度（IN）
+//参数3：控件高度（IN）
+//参数4：缩放后结果图（OUT）
+static void Geometric_Scaling_Image(const QString path, const int control_width, const int control_height, QPixmap &dst_pix)
+{
+    QPixmap pix;
+    pix.load(path);
+
+    double ratio_w = pix.width() * 1.0 / control_width;
+    double ratio_h = pix.height() * 1.0 / control_height;
+
+    if (ratio_w >= ratio_h)
+        pix = pix.scaled(pix.width() / ratio_w, pix.height() / ratio_w);
+    else
+        pix = pix.scaled(pix.width() / ratio_h, pix.height() / ratio_h);
+
+    dst_pix = pix;
+}
+
+
 static bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
 {
 	int yIdx, uIdx, vIdx, idx;
@@ -213,7 +235,18 @@ MainMenu::MainMenu(QWidget *parent)
 
 /**************************************************智能测试界面********************************************************/
 	{
+        ui.treeWidget_detectResult->setHeaderLabels(QStringList() << QString::fromLocal8Bit("属性") << QString::fromLocal8Bit("详细信息"));
+        ui.treeWidget_recognizeResult->setHeaderLabels(QStringList() << QString::fromLocal8Bit("属性") << QString::fromLocal8Bit("详细信息"));
 
+        CreateAItestEngine();
+
+        connect(ui.pushButton_loadCompareImage1,  &QPushButton::clicked, this, &MainMenu::LoadCompareImg1);
+        connect(ui.pushButton_loadCompareImage2,  &QPushButton::clicked, this, &MainMenu::LoadCompareImg2);
+        connect(ui.pushButton_compareFace,        &QPushButton::clicked, this, &MainMenu::DealFaceCompare);
+        connect(ui.pushButton_loadDetectImage,    &QPushButton::clicked, this, &MainMenu::LoadDetectImg);
+        connect(ui.pushButton_detectFace,         &QPushButton::clicked, this, &MainMenu::DealFaceDetect);
+        connect(ui.pushButton_loadRecognizeImage, &QPushButton::clicked, this, &MainMenu::LoadRecognizeImg);
+        connect(ui.pushButton_recognizeFace,      &QPushButton::clicked, this, &MainMenu::DealFaceRecognize);
 	}
 }
 
@@ -743,6 +776,249 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共%2 页     %1 条记录    当前 %3 页").arg(cur_group_toal_user_info_.total_count)
 									.arg(user_list_cur_page_total_).arg(user_list_cur_page_num_));
 
+}
+
+//创建智能测试引擎
+void MainMenu::CreateAItestEngine()
+{
+    pFaceEngine = FaceEngineClass::GetInstance();
+}
+
+//载入人脸对比图片1
+void MainMenu::LoadCompareImg1()
+{
+    QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+        tr("Images (*.png *.jpg);; All files (*.*)"));
+
+    if (!img_path.isEmpty())
+    {
+        comparePath1 = img_path;
+        QPixmap pix;
+        Geometric_Scaling_Image(comparePath1, ui.label_compareImage1->width(), ui.label_compareImage1->height(), pix);
+        ui.label_compareImage1->setPixmap(pix);
+        ui.toolButton_compareFaceResult->setText(" ");
+    }
+    else
+    {
+        ui.label_compareImage1->clear();
+        comparePath1.clear();
+    }
+}
+
+//载入人脸对比图片2
+void MainMenu::LoadCompareImg2()
+{
+    QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+        tr("Images (*.png *.jpg);; All files (*.*)"));
+
+    if (!img_path.isEmpty())
+    {
+        comparePath2 = img_path;
+        QPixmap pix;
+        Geometric_Scaling_Image(comparePath2, ui.label_compareImage2->width(), ui.label_compareImage2->height(), pix);
+        ui.label_compareImage2->setPixmap(pix);
+        ui.toolButton_compareFaceResult->setText(" ");
+    }
+    else
+    {
+        ui.label_compareImage2->clear();
+        comparePath2.clear();
+    }
+}
+
+//人脸对比处理
+void MainMenu::DealFaceCompare()
+{
+    qDebug() << QString::fromLocal8Bit("人脸比对");
+    IplImage* img1 = cvLoadImage(comparePath1.toLocal8Bit());
+
+    if (img1 == NULL)
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片一为空！"));
+        return;
+    }
+    ASF_MultiFaceInfo faceDetectResult;
+    int res = pFaceEngine->FacesDetectTask(img1, &faceDetectResult);
+    ASF_FaceFeature feature;
+    res = pFaceEngine->FaceFeatureExtract(img1, faceDetectResult, &feature);
+
+    ASF_FaceFeature feature_copy;
+    feature_copy.feature = (MByte*)malloc(feature.featureSize);
+    memcpy(feature_copy.feature, feature.feature, feature.featureSize);
+    feature_copy.featureSize = feature.featureSize;
+
+
+    IplImage* img2 = cvLoadImage(comparePath2.toLocal8Bit());
+    if (img2 == NULL)
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片二为空！"));
+        return;
+    }
+    ASF_MultiFaceInfo faceDetectResult2;
+    res = pFaceEngine->FacesDetectTask(img2, &faceDetectResult2);
+    res = pFaceEngine->FaceFeatureExtract(img2, faceDetectResult2, &feature);
+
+    MFloat confidenceValue;
+    res = pFaceEngine->FaceCompareTask(feature, feature_copy, &confidenceValue);
+
+    QString str = QString("%1:%2%").arg(QString::fromLocal8Bit("相似度")).arg(QString::number(confidenceValue * 100, 'f', 2));
+
+    ui.toolButton_compareFaceResult->setStyleSheet("background-color:white;color:red");
+    ui.toolButton_compareFaceResult->setText(str);
+    free(feature_copy.feature);
+    cvReleaseImage(&img1);
+    cvReleaseImage(&img2);
+}
+
+//载入人脸检测图片
+void MainMenu::LoadDetectImg()
+{
+    ui.treeWidget_detectResult->clear();
+    QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+        tr("Images (*.png *.jpg);; All files (*.*)"));
+
+    if (!img_path.isEmpty())
+    {
+        detectPath = img_path;
+        QPixmap pix;
+        Geometric_Scaling_Image(detectPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
+        ui.label_detectImage->setPixmap(pix);
+        //ui.toolButton_compareFaceResult->setText(" ");
+    }
+    else
+    {
+        ui.label_detectImage->clear();
+        detectPath.clear();
+    }
+}
+
+//人脸检测处理
+void MainMenu::DealFaceDetect()
+{
+    qDebug() << QString::fromLocal8Bit("人脸检测");
+
+    ui.treeWidget_detectResult->clear();
+
+    //if (display_detect_result_ != NULL)
+    //{
+    //    delete display_detect_result_;
+    //    display_detect_result_ = NULL;
+    //}
+
+    IplImage* img = cvLoadImage(detectPath.toLocal8Bit());
+    if (img == NULL)
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片为空！"));
+        return;
+    }
+
+    FaceDetectResult face_detect_result;
+    int res = pFaceEngine->FacesDetectTask(img, &face_detect_result, detectImage);
+
+    QString detPath = "./faceImageCache/detectImage.jpg";
+    cv::imwrite(detPath.toStdString(), detectImage);
+    ui.label_detectImage->clear();
+    QPixmap pix;
+    Geometric_Scaling_Image(detPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
+    ui.label_detectImage->setPixmap(pix);
+
+    QTreeWidgetItem *num_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("人脸个数")
+        << QString::number(face_detect_result.detectInfo.faceNum));
+    ui.treeWidget_detectResult->addTopLevelItem(num_item);
+
+    for (int i = 0; i < face_detect_result.detectInfo.faceNum; i++)
+    {
+        //人脸信息根节点
+        QString str = QString("%1%2%3").arg(QString::fromLocal8Bit("人脸")).arg(QString::number(i + 1)).arg(QString::fromLocal8Bit("信息"));
+        QTreeWidgetItem *info_item = new QTreeWidgetItem(QStringList() << str);
+        ui.treeWidget_detectResult->addTopLevelItem(info_item);
+
+        //性别
+        QString sex_str;
+        if (face_detect_result.genderInfo.genderArray[i] == 0)
+        {
+            sex_str = QString("%1").arg(QString::fromLocal8Bit("男"));
+        }
+        else if (face_detect_result.genderInfo.genderArray[i] == 1)
+        {
+            sex_str = QString("%1").arg(QString::fromLocal8Bit("女"));
+        }
+        else
+        {
+            sex_str = QString("%1").arg(QString::fromLocal8Bit("未知"));
+        }
+        QTreeWidgetItem *sex_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("性别") << sex_str);
+        info_item->addChild(sex_item);
+
+        //年龄信息
+        QTreeWidgetItem *age_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("年龄")
+            << QString::number(face_detect_result.ageInfo.ageArray[i]));
+        info_item->addChild(age_item);
+
+        //人脸位置信息
+        QTreeWidgetItem *location_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("人脸位置"));
+        info_item->addChild(location_item);
+
+        QTreeWidgetItem *left_location_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("left")
+            << QString::number(face_detect_result.detectInfo.faceRect[i].left));
+        location_item->addChild(left_location_item);
+
+        QTreeWidgetItem *right_location_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("right")
+            << QString::number(face_detect_result.detectInfo.faceRect[i].right));
+        location_item->addChild(right_location_item);
+
+        QTreeWidgetItem *top_location_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("top")
+            << QString::number(face_detect_result.detectInfo.faceRect[i].top));
+        location_item->addChild(top_location_item);
+
+        QTreeWidgetItem *bottom_location_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("bottom")
+            << QString::number(face_detect_result.detectInfo.faceRect[i].bottom));
+        location_item->addChild(bottom_location_item);
+
+        //人脸3D信息
+        QTreeWidgetItem *angle_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("3D信息"));
+        info_item->addChild(angle_item);
+
+        QTreeWidgetItem *pitch_angle_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("pitch")
+            << QString::number(face_detect_result.angleInfo.pitch[i], 'f', 2));
+        angle_item->addChild(pitch_angle_item);
+
+        QTreeWidgetItem *roll_angle_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("roll")
+            << QString::number(face_detect_result.angleInfo.roll[i], 'f', 2));
+        angle_item->addChild(roll_angle_item);
+
+        QTreeWidgetItem *yaw_angle_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("yaw")
+            << QString::number(face_detect_result.angleInfo.yaw[i], 'f', 2));
+        angle_item->addChild(yaw_angle_item);
+    }
+    //ui.button_display_result->setEnabled(true);
+    cvReleaseImage(&img);
+}
+
+//载入人脸识别图片
+void MainMenu::LoadRecognizeImg()
+{
+    QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+        tr("Images (*.png *.jpg);; All files (*.*)"));
+
+    if (!img_path.isEmpty())
+    {
+        recognizePath = img_path;
+        QPixmap pix;
+        Geometric_Scaling_Image(recognizePath, ui.label_recognizeImage->width(), ui.label_recognizeImage->height(), pix);
+        ui.label_recognizeImage->setPixmap(pix);
+        //ui.toolButton_compareFaceResult->setText(" ");
+    }
+    else
+    {
+        ui.label_recognizeImage->clear();
+        recognizePath.clear();
+    }
+}
+
+//人脸识别处理
+void MainMenu::DealFaceRecognize()
+{
 }
 
 //绘制系统背景
