@@ -1,0 +1,22 @@
+﻿  Reading Qt configuration (C:\Qt\Qt5.14.1\5.14.1\msvc2017_64\bin\qmake.exe)
+  uic DisplayUserInfoItem.ui
+  uic MainMenu.ui
+  uic VFR_system.ui
+  rcc VFR_system.qrc
+  moc VFR_system.h
+  moc MainMenu.h
+  moc DisplayVideoLabel.h
+  moc DisplayVideoThread.h
+   RCC: Warning: No resources in 'E:\workspace\cPlusPlus_project\vfr\VFR_system\VFR_system\VFR_system.qrc'.
+  moc DisplayUserInfoItem.h
+  DisplayUserInfoItem.cpp
+  DisplayVideoLabel.cpp
+  DisplayVideoThread.cpp
+  main.cpp
+  MainMenu.cpp
+  face_operation.cpp
+  VFR_system.cpp
+e:\workspace\cplusplus_project\vfr\vfr_system\vfr_system\src\facefunction\face_operation.h(7): fatal error C1083: 无法打开包括文件: “arcsoft_face_sdk.h”: No such file or directory (编译源文件 src\facefunction\face_operation.cpp)
+e:\workspace\cplusplus_project\vfr\vfr_system\vfr_system\sdkheadfile.h(6): fatal error C1083: 无法打开包括文件: “VzBoxClientSDK.h”: No such file or directory (编译源文件 MainMenu.cpp)
+e:\workspace\cplusplus_project\vfr\vfr_system\vfr_system\sdkheadfile.h(6): fatal error C1083: 无法打开包括文件: “VzBoxClientSDK.h”: No such file or directory (编译源文件 main.cpp)
+e:\workspace\cplusplus_project\vfr\vfr_system\vfr_system\sdkheadfile.h(6): fatal error C1083: 无法打开包括文件: “VzBoxClientSDK.h”: No such file or directory (编译源文件 VFR_system.cpp)

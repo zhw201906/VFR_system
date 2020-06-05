@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DealBuildingMap.cpp" />
     <ClCompile Include="DisplayUserInfoItem.cpp" />
     <ClCompile Include="DisplayVideoLabel.cpp" />
     <ClCompile Include="DisplayVideoThread.cpp" />
@@ -171,6 +172,7 @@
     <QtRcc Include="VFR_system.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="DealBuildingMap.h" />
     <ClInclude Include="src\facefunction\face_operation.h" />
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />

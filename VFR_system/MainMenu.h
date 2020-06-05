@@ -18,6 +18,7 @@
 #include "DisplayVideoThread.h"
 #include "DisplayUserInfoItem.h"
 #include "face_operation.h"
+#include "DealBuildingMap.h"
 
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
