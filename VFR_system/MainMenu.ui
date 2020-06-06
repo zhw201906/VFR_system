@@ -139,8 +139,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>16</width>
-                  <height>16</height>
+                  <width>98</width>
+                  <height>28</height>
                  </rect>
                 </property>
                </widget>
@@ -1578,6 +1578,18 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_16">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
              <item>
               <widget class="QPushButton" name="pushButton_loadExistMap">
                <property name="text">
@@ -1641,6 +1653,12 @@
           </item>
           <item>
            <widget class="BuildingMapLabel" name="label_showBuildingMap">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="frameShape">
              <enum>QFrame::Box</enum>
             </property>

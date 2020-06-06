@@ -12,6 +12,7 @@
 #include <functional> 
 #include <QImage>
 #include <QFileDialog>
+#include <QPoint>
 
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
@@ -96,11 +97,14 @@ public:
 
     void LoadBuildingMapImage();
     void RefreshBuildMap();
+    void DealPlaceCamera(QPoint pt);
+    
 
 
-    void paintEvent(QPaintEvent *event);     //»æÍ¼
-	void resizeEvent(QResizeEvent *event);
-	void closeEvent(QCloseEvent *event);
+    virtual void paintEvent(QPaintEvent *event);     //»æÍ¼
+    virtual void resizeEvent(QResizeEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
+    virtual bool eventFilter(QObject *watched, QEvent *event);
 
 public slots:
 	void DealSingleClickedVideoLabel(int chn);

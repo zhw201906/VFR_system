@@ -88,6 +88,9 @@ MainMenu::MainMenu(QWidget *parent)
 		SetIconInit();
 		ChangeSystemMode(0);
 
+        //为地图显示控件安装事件过滤器
+        ui.label_showBuildingMap->installEventFilter(this);
+
 		//通过按钮切换系统功能
 		connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(0);
@@ -232,6 +235,7 @@ MainMenu::MainMenu(QWidget *parent)
 	{
 
         connect(ui.pushButton_loadMapImage, &QPushButton::clicked, this, &MainMenu::LoadBuildingMapImage);
+        //connect(ui.label_showBuildingMap,&BuildingMapLabel::selectPosition,this,&)
 	}
 
 /**************************************************智能测试界面********************************************************/
@@ -991,7 +995,6 @@ void MainMenu::DealFaceDetect()
             << QString::number(face_detect_result.angleInfo.yaw[i], 'f', 2));
         angle_item->addChild(yaw_angle_item);
     }
-    //ui.button_display_result->setEnabled(true);
     cvReleaseImage(&img);
 }
 
@@ -1007,7 +1010,6 @@ void MainMenu::LoadRecognizeImg()
         QPixmap pix;
         Geometric_Scaling_Image(recognizePath, ui.label_recognizeImage->width(), ui.label_recognizeImage->height(), pix);
         ui.label_recognizeImage->setPixmap(pix);
-        //ui.toolButton_compareFaceResult->setText(" ");
     }
     else
     {
@@ -1029,21 +1031,16 @@ void MainMenu::LoadBuildingMapImage()
 
     newBuildingMapPath = img_path;
 
+    qDebug() << "main before show   w:" << ui.label_showBuildingMap->width() << "  h:" << ui.label_showBuildingMap->width();
+    
     ui.label_showBuildingMap->SetShowImage(newBuildingMapPath);
+
+    qDebug() << "main after  show   w:" << ui.label_showBuildingMap->width() << "  h:" << ui.label_showBuildingMap->width();
+
     QImage img(newBuildingMapPath);
-    float scaled_x = img.width()  / ui.label_showBuildingMap->width();
-    float scaled_y = img.height() / ui.label_showBuildingMap->height();
+    float scaled_x = img.width()  * 1.0 / ui.label_showBuildingMap->width();
+    float scaled_y = img.height() * 1.0 / ui.label_showBuildingMap->height();
     ui.label_showBuildingMap->SetImageScaled(scaled_x, scaled_y);
-    //if (!img_path.isEmpty())
-    //{
-    //    QImage img(newBuildingMapPath);
-    //    ui.label_showBuildingMap->setPixmap(QPixmap::fromImage(img.scaled(ui.label_showBuildingMap->width(),ui.label_showBuildingMap->height())));
-    //}
-    //else
-    //{
-    //    ui.label_showBuildingMap->clear();
-    //    newBuildingMapPath.clear();
-    //}
 }
 
 //刷新显示地图
@@ -1051,9 +1048,13 @@ void MainMenu::RefreshBuildMap()
 {
     ui.label_showBuildingMap->RefreshDisplayImage();
     QImage img(newBuildingMapPath);
-    float scaled_x = img.width() / ui.label_showBuildingMap->width();
-    float scaled_y = img.height() / ui.label_showBuildingMap->height();
+    float scaled_x = img.width()  * 1.0 / ui.label_showBuildingMap->width();
+    float scaled_y = img.height() * 1.0 / ui.label_showBuildingMap->height();
     ui.label_showBuildingMap->SetImageScaled(scaled_x, scaled_y);
+}
+
+void MainMenu::DealPlaceCamera(QPoint pt)
+{
 }
 
 //绘制系统背景
@@ -1071,13 +1072,19 @@ void MainMenu::resizeEvent(QResizeEvent * event)
 {
     qDebug() << "Mainmenu windows resize...";
 	RefreshVideoDisplayWindow();
-    //RefreshBuildMap();
+    RefreshBuildMap();
 }
 
 //关闭系统主窗口
 void MainMenu::closeEvent(QCloseEvent * event)
 {
 
+}
+
+//事件过滤器
+bool MainMenu::eventFilter(QObject * watched, QEvent * event)
+{
+    return false;
 }
 
 //处理鼠标单击视频窗口
