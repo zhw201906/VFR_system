@@ -97,6 +97,7 @@ public:
 
     void LoadBuildingMapImage();
     void RefreshBuildMap();
+<<<<<<< HEAD
     void DealPlaceCamera(QPoint pt);
     
 
@@ -105,6 +106,13 @@ public:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void closeEvent(QCloseEvent *event);
     virtual bool eventFilter(QObject *watched, QEvent *event);
+=======
+
+
+    void paintEvent(QPaintEvent *event);     //»æÍ¼
+	void resizeEvent(QResizeEvent *event);
+	void closeEvent(QCloseEvent *event);
+>>>>>>> 3a392791294542a0460206aadfa70ef24ce26518
 
 public slots:
 	void DealSingleClickedVideoLabel(int chn);

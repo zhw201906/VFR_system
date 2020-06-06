@@ -1653,12 +1653,15 @@
           </item>
           <item>
            <widget class="BuildingMapLabel" name="label_showBuildingMap">
+<<<<<<< HEAD
             <property name="sizePolicy">
              <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+=======
+>>>>>>> 3a392791294542a0460206aadfa70ef24ce26518
             <property name="frameShape">
              <enum>QFrame::Box</enum>
             </property>
