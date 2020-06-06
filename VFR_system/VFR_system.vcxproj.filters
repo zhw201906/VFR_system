@@ -49,6 +49,9 @@
     <ClCompile Include="src\facefunction\face_operation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BuildingMapLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -64,6 +67,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="DisplayUserInfoItem.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="BuildingMapLabel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -33,7 +33,7 @@
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
 #define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
 
-#define  OPEN_IMAGE_DIR   "./faceImageCache"
+#define  OPEN_IMAGE_DIR   "d:/test_image"
 
 typedef struct user_group_info {
 
@@ -93,6 +93,11 @@ public:
     void LoadRecognizeImg();
     void DealFaceRecognize();
 
+
+    void LoadBuildingMapImage();
+    void RefreshBuildMap();
+
+
     void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
@@ -143,6 +148,7 @@ private:
     QString comparePath2;
     QString detectPath;
     QString recognizePath;
+    QString newBuildingMapPath;
 
     cv::Mat detectImage;
     cv::Mat recognizeImage;
