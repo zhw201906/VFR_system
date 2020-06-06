@@ -231,6 +231,7 @@ MainMenu::MainMenu(QWidget *parent)
 /**************************************************轨迹查看界面********************************************************/
 	{
 
+        connect(ui.pushButton_loadMapImage, &QPushButton::clicked, this, &MainMenu::LoadBuildingMapImage);
 	}
 
 /**************************************************智能测试界面********************************************************/
@@ -883,7 +884,6 @@ void MainMenu::LoadDetectImg()
         QPixmap pix;
         Geometric_Scaling_Image(detectPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
         ui.label_detectImage->setPixmap(pix);
-        //ui.toolButton_compareFaceResult->setText(" ");
     }
     else
     {
@@ -1021,6 +1021,41 @@ void MainMenu::DealFaceRecognize()
 {
 }
 
+//载入楼宇平面图
+void MainMenu::LoadBuildingMapImage()
+{
+    QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+        tr("Images (*.png *.jpg);; All files (*.*)"));
+
+    newBuildingMapPath = img_path;
+
+    ui.label_showBuildingMap->SetShowImage(newBuildingMapPath);
+    QImage img(newBuildingMapPath);
+    float scaled_x = img.width()  / ui.label_showBuildingMap->width();
+    float scaled_y = img.height() / ui.label_showBuildingMap->height();
+    ui.label_showBuildingMap->SetImageScaled(scaled_x, scaled_y);
+    //if (!img_path.isEmpty())
+    //{
+    //    QImage img(newBuildingMapPath);
+    //    ui.label_showBuildingMap->setPixmap(QPixmap::fromImage(img.scaled(ui.label_showBuildingMap->width(),ui.label_showBuildingMap->height())));
+    //}
+    //else
+    //{
+    //    ui.label_showBuildingMap->clear();
+    //    newBuildingMapPath.clear();
+    //}
+}
+
+//刷新显示地图
+void MainMenu::RefreshBuildMap()
+{
+    ui.label_showBuildingMap->RefreshDisplayImage();
+    QImage img(newBuildingMapPath);
+    float scaled_x = img.width() / ui.label_showBuildingMap->width();
+    float scaled_y = img.height() / ui.label_showBuildingMap->height();
+    ui.label_showBuildingMap->SetImageScaled(scaled_x, scaled_y);
+}
+
 //绘制系统背景
 void MainMenu::paintEvent(QPaintEvent * event)
 {
@@ -1034,7 +1069,9 @@ void MainMenu::paintEvent(QPaintEvent * event)
 //改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
+    qDebug() << "Mainmenu windows resize...";
 	RefreshVideoDisplayWindow();
+    //RefreshBuildMap();
 }
 
 //关闭系统主窗口
