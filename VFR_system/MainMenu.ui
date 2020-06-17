@@ -104,7 +104,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="onlineMonitoring">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -136,8 +136,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>98</width>
-                  <height>28</height>
+                  <width>1039</width>
+                  <height>95</height>
                  </rect>
                 </property>
                </widget>
@@ -1596,19 +1596,6 @@
             </layout>
            </widget>
           </item>
-          <item>
-           <widget class="DealBuildingMap" name="label_buildingMap">
-            <property name="frameShape">
-             <enum>QFrame::Box</enum>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -2185,13 +2172,6 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>DealBuildingMap</class>
-   <extends>QLabel</extends>
-   <header location="global">dealbuildingmap.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
