@@ -230,7 +230,23 @@ MainMenu::MainMenu(QWidget *parent)
 
 /**************************************************轨迹查看界面********************************************************/
 	{
+		ui.label_buildingMap->setStyleSheet(BUILDING_MAP_LABEL_STYLE);
+		ui.lineEdit_cameraPositionName->setPlaceholderText(QString::fromLocal8Bit("为相机安装位置设置名称，非必须"));
+		ui.lineEdit_searchPersonTrack->setPlaceholderText(QString::fromLocal8Bit("必须是已存在用户，才可绘制轨迹"));
+		ui.lineEdit_buildingMapName->setPlaceholderText(QString::fromLocal8Bit("新建地图名称，不可重复"));
 
+		place_camera_num = 0;
+		connect(ui.pushButton_loadBuildingImage, &QPushButton::clicked, this, &MainMenu::LoadBuildingMapImage);
+		connect(ui.pushButton_placeCamera, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::RecodeCurrentCameraPoint);
+		connect(ui.pushButton_cacelPlaceCamera, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::CalcelOneRecodePoint);
+		connect(ui.label_buildingMap, &DealBuildingMap::CalcelOnePlacedCamera,   this, &MainMenu::CalcelPlacedOneCamera);
+		connect(ui.label_buildingMap, &DealBuildingMap::CurrentPlaceCameraPoint, this, &MainMenu::DealPlaceCameraPosition);
+		connect(ui.pushButton_saveBuildingMap, &QPushButton::clicked, this, &MainMenu::SaveNewBuildingMap);
+		connect(ui.pushButton_deleteExistBuildingMap, &QPushButton::clicked, this, &MainMenu::DeleteExistedBuildingMap);
+		connect(ui.comboBox_existedBuindingMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged), this, &MainMenu::LoadExistedBuildingMap);
+		connect(ui.pushButton_resetCameraPlace, &QPushButton::clicked, this, &MainMenu::ResetCreateNewBuildingMap);
+
+		UpdateExistedBuildingMapList();
 	}
 
 /**************************************************智能测试界面********************************************************/
@@ -778,6 +794,282 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 
 }
 
+//载入建筑平面图照片
+void MainMenu::LoadBuildingMapImage()
+{
+	QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
+		tr("Images (*.png *.jpg);; All files (*.*)"));
+
+	if (!img_path.isEmpty())
+	{
+		ui.label_buildingMap->CleanSelectedBuildingMap();
+		ui.comboBox_existedBuindingMap->setCurrentIndex(0);
+
+		building_map_image_path = img_path;
+		QPixmap pix(building_map_image_path);
+		float scaled_x = pix.width() * 1.0 / ui.label_buildingMap->width();
+		float scaled_y = pix.height() * 1.0 / ui.label_buildingMap->height();
+		ui.label_buildingMap->SetScaledParam(scaled_x, scaled_y);
+		ui.label_buildingMap->setPixmap(pix.scaled(ui.label_buildingMap->width(), ui.label_buildingMap->height()));		
+		ui.label_buildingMap->SetOperatorMode(BUILDING_CREATE_MAP);
+	}
+	else
+	{
+		ui.label_buildingMap->clear();
+		building_map_image_path.clear();
+		ui.label_buildingMap->SetOperatorMode(BUILDING_SHOW_MAP);
+		ui.label_buildingMap->CleanSelectedBuildingMap();
+		ui.comboBox_existedBuindingMap->setCurrentIndex(0);
+	}
+}
+
+//窗口变化时，建筑图像刷新显示
+void MainMenu::RefreshBuildMapDisplay()
+{
+	if (!building_map_image_path.isEmpty())
+	{
+		QPixmap pix(building_map_image_path);
+		float scaled_x = pix.width() * 1.0 / ui.label_buildingMap->width();
+		float scaled_y = pix.height() * 1.0 / ui.label_buildingMap->height();
+		ui.label_buildingMap->SetScaledParam(scaled_x, scaled_y);
+		ui.label_buildingMap->setPixmap(pix.scaled(ui.label_buildingMap->width(), ui.label_buildingMap->height()));
+	}
+}
+
+//处理放置相机事件
+void MainMenu::DealPlaceCameraPosition(QPoint pt)
+{
+	if (pt == QPoint(0, 0))
+	{
+		return;
+	}
+
+	//if (ui.comboBox_selectCamera->currentText().isEmpty())
+	//{
+	//	msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择相机后再放置相机！"));
+	//	return;
+	//}
+
+	QString camera_ip = ui.comboBox_selectCamera->currentText();
+	QString camera_place_name = ui.lineEdit_cameraPositionName->text();
+
+	place_camera_num++;
+	QString cur_camera_place_info;
+
+	if (place_camera_num <= 1)
+	{
+		cur_camera_place_info.append(QString("{\n  \"camera_id\":%1,\n").arg(place_camera_num));
+	}
+	else
+	{
+		cur_camera_place_info.append(QString(",{\n  \"camera_id\":%1,\n").arg(place_camera_num));
+	}
+
+	cur_camera_place_info.append(QString("  \"camera_ip\":\"%1\",\n").arg(camera_ip));
+	cur_camera_place_info.append(QString("  \"position_name\":\"%1\",\n").arg(camera_place_name));
+	cur_camera_place_info.append(QString("  \"camera_position_x\":%1,\n").arg(pt.x()));
+	cur_camera_place_info.append(QString("  \"camera_position_y\":%1\n}").arg(pt.y()));
+
+	ui.textEdit_cameraPlaceInfo->append(cur_camera_place_info);
+	place_camera_info_buff.push_back(cur_camera_place_info);
+	ui.lineEdit_cameraPositionName->clear();
+}
+
+//刷新显示放置相机位置的信息
+void MainMenu::RefreshShowPlaceCameraInfo()
+{
+	if (place_camera_info_buff.size() != place_camera_num)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("放置相机信息与数量不符！"));
+	}
+
+	ui.textEdit_cameraPlaceInfo->clear();
+	auto it = place_camera_info_buff.begin();
+	while (it != place_camera_info_buff.end())
+	{
+		ui.textEdit_cameraPlaceInfo->append(*it);
+		++it;
+	}
+}
+
+//撤销一个已经放置的相机
+void MainMenu::CalcelPlacedOneCamera()
+{
+	if (place_camera_num > 0)
+	{
+		place_camera_num--;
+		auto it = place_camera_info_buff.end();
+		it--;
+		place_camera_info_buff.erase(it);
+	}
+	RefreshShowPlaceCameraInfo();
+}
+
+//重置新建地图
+void MainMenu::ResetCreateNewBuildingMap()
+{
+	CleanCreatingNewBuinldingMap();
+}
+
+//保存新建立的建筑物地图
+void MainMenu::SaveNewBuildingMap()
+{
+	if (ui.lineEdit_buildingMapName->text().isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请设置新地图的名称！"));
+		return;
+	}
+	if (ui.textEdit_cameraPlaceInfo->toPlainText().isEmpty() || building_map_image_path.isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("没有载入文件或者没有放置相机！"));
+		return;
+	}
+
+	//获取框中数据，并构建json格式
+	QString building_map_name = ui.lineEdit_buildingMapName->text();
+	QString place_camera_info = QString("{\"camera_info\":[") + ui.textEdit_cameraPlaceInfo->toPlainText() + QString("],");
+	place_camera_info.append("\"camera_name\":\"");
+	place_camera_info.append(building_map_name);
+	place_camera_info.append("\",");
+	place_camera_info.append("\"camera_num\":");
+	place_camera_info.append(QString("%1").arg(place_camera_num));
+	place_camera_info.append("}");
+
+	//新地图存储目录
+	QString save_path = QString(BUILDING_MAP_FILE_PATH) + QString('\\') + building_map_name;
+	QDir dir;
+	if (!dir.exists(save_path))   //目录不存在时，创建目录
+	{
+		bool res = dir.mkpath(save_path);
+	}
+	else
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图%1已存在，请重新设置！").arg(building_map_name));
+		return;
+	}
+
+	QString file_path = save_path + QString("/%1.json").arg(building_map_name);
+	QFile file(file_path);
+	bool ret = file.open(QIODevice::WriteOnly | QIODevice::Text);
+	if (!ret)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图信息 %1 保存失败！").arg(building_map_name));
+		return;		
+	}
+	file.write(place_camera_info.toUtf8());
+	file.close();
+
+	QPixmap pix(building_map_image_path);
+	QString image_path = save_path + QString("/%1.jpg").arg(building_map_name);
+	ret = pix.save(image_path);
+	if (!ret)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图图片 %1 保存失败！").arg(building_map_name));
+		return;
+	}
+
+	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("地图创建成功！"));
+	UpdateExistedBuildingMapList();
+	CleanCreatingNewBuinldingMap();
+	ui.lineEdit_buildingMapName->clear();
+}
+
+//清空正在创建的地图
+void MainMenu::CleanCreatingNewBuinldingMap()
+{
+	building_map_image_path.clear();
+	place_camera_num = 0;
+	place_camera_info_buff.clear();
+	ui.textEdit_cameraPlaceInfo->clear();
+	ui.label_buildingMap->clear();
+	ui.label_buildingMap->CleanPlaceingNewBuinldingMap();
+	ui.lineEdit_buildingMapName->clear();
+	ui.lineEdit_cameraPositionName->clear();
+}
+
+//删除已保存的地图
+void MainMenu::DeleteExistedBuildingMap()
+{
+	QString cur_map = ui.comboBox_existedBuindingMap->currentText();
+	if (cur_map.compare(QString::fromLocal8Bit("请选择")) == 0 || cur_map.isEmpty())
+	{
+		return;
+	}
+	QString del_map = QString(BUILDING_MAP_FILE_PATH) + QString('\\') + cur_map;
+	QDir dir;
+	dir.setPath(del_map);
+	dir.removeRecursively();
+	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("删除地图 %1 成功！").arg(cur_map));
+}
+
+//更新已有的地图列表
+void MainMenu::UpdateExistedBuildingMapList()
+{
+	existed_building_map.clear();
+	ui.comboBox_existedBuindingMap->clear();
+
+	QDir dir(BUILDING_MAP_FILE_PATH);
+	dir.setFilter(QDir::Dirs);
+	foreach(QFileInfo fullDir, dir.entryInfoList())
+	{
+		if (fullDir.fileName() == "." || fullDir.fileName() == "..") continue;
+		existed_building_map.push_back(fullDir.fileName());
+	}
+	ui.comboBox_existedBuindingMap->addItem(QString::fromLocal8Bit("请选择"));
+	auto it = existed_building_map.begin();
+	while (it != existed_building_map.end())
+	{
+		ui.comboBox_existedBuindingMap->addItem(*it);
+		++it;
+	}
+}
+
+//更新已有的行人轨迹图
+void MainMenu::UpdateSavedPersonTrackList()
+{
+
+}
+
+//加载已有的楼宇地图
+void MainMenu::LoadExistedBuildingMap(const QString &select)
+{
+	if (select.compare(QString::fromLocal8Bit("请选择")) == 0 || select.isEmpty())
+	{
+		return;
+	}
+
+	CleanCreatingNewBuinldingMap();
+	QString cur_map = QString(BUILDING_MAP_FILE_PATH) + QString('\\') + select;
+	QString cur_image = cur_map + QString("/%1.jpg").arg(select);
+	QString cur_info= cur_map + QString("/%1.json").arg(select);
+
+	QFile file(cur_info);
+	int ret = file.open(QIODevice::ReadOnly | QIODevice::Text);
+	if (!ret)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图文件已损坏或不存在！"));
+		return;
+	}
+	QByteArray sinfo = file.readAll();
+	if (sinfo.isEmpty())
+	{
+		file.close();
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图文件已损坏！"));
+		return;
+	}
+	file.close();
+
+	building_map_image_path = cur_image;
+	QString camera_info(sinfo);
+	QPixmap pix(cur_image);
+	float scaled_x = pix.width() * 1.0 / ui.label_buildingMap->width();
+	float scaled_y = pix.height() * 1.0 / ui.label_buildingMap->height();
+	ui.label_buildingMap->SetScaledParam(scaled_x, scaled_y);
+	ui.label_buildingMap->setPixmap(pix.scaled(ui.label_buildingMap->width(), ui.label_buildingMap->height()));
+	ui.label_buildingMap->SetOperatorMode(BUILDING_SHOW_MAP);
+	ui.label_buildingMap->DealSelectedBuildingMap(camera_info);
+}
+
 //创建智能测试引擎
 void MainMenu::CreateAItestEngine()
 {
@@ -1034,13 +1326,37 @@ void MainMenu::paintEvent(QPaintEvent * event)
 //改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
+	qDebug() << "-----------MainMenu resize event";
 	RefreshVideoDisplayWindow();
+	RefreshBuildMapDisplay();
 }
 
 //关闭系统主窗口
 void MainMenu::closeEvent(QCloseEvent * event)
 {
 
+}
+
+//事件过滤器
+bool MainMenu::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == ui.label_buildingMap)
+	{
+		//if (event->type() == QEvent::Paint)
+		//{
+		//	//ui.label_buildingMap->paintEvent((QPaintEvent*)event);
+		//	//DisplayPlacedCameraPosition();
+		//	return true;
+		//}
+		//else 
+		if (event->type() == QEvent::Resize)
+		{
+			qDebug() << "-----------MainMenu eventFilter event";
+			return true;
+		}
+	} 
+
+	return QWidget::eventFilter(watched, event);
 }
 
 //处理鼠标单击视频窗口

@@ -52,6 +52,9 @@
     <ClCompile Include="DealBuildingMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="third_lib\json\jsoncpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -109,6 +112,15 @@
       <Filter>Third Files</Filter>
     </ClInclude>
     <ClInclude Include="src\facefunction\face_operation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="comDefine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\json\json.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\json\json-forwards.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

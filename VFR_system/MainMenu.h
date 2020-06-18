@@ -19,6 +19,8 @@
 #include "DisplayUserInfoItem.h"
 #include "face_operation.h"
 #include "DealBuildingMap.h"
+#include "comDefine.h"
+
 
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
@@ -31,10 +33,12 @@
 #define  FOUR_WINDOWS   2
 #define  NINE_WINDOWS   3
 
-#define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
-#define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
+#define  CAMERA_POSITION_SIZE  20
 
 #define  OPEN_IMAGE_DIR   "./faceImageCache"
+
+#define  BUILDING_MAP_FILE_PATH  "./comtrack/buildingmap"
+#define  PERSON_TRACK_FILE_PATH  "./comtrack/persontrack"
 
 typedef struct user_group_info {
 
@@ -85,6 +89,21 @@ public:
 	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
 
 
+	void LoadBuildingMapImage();
+	void RefreshBuildMapDisplay();
+	void DealPlaceCameraPosition(QPoint pt);
+	void RefreshShowPlaceCameraInfo();
+	void CalcelPlacedOneCamera();
+	void ResetCreateNewBuildingMap();
+	void SaveNewBuildingMap();
+	void CleanCreatingNewBuinldingMap();
+	void DeleteExistedBuildingMap();
+	void UpdateExistedBuildingMapList();
+	void UpdateSavedPersonTrackList();
+	void LoadExistedBuildingMap(const QString &str);
+
+
+
     void CreateAItestEngine();
     void LoadCompareImg1();
     void LoadCompareImg2();
@@ -94,9 +113,11 @@ public:
     void LoadRecognizeImg();
     void DealFaceRecognize();
 
+protected:
     void paintEvent(QPaintEvent *event);     //»æÍ¼
 	void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
+	bool eventFilter(QObject *watched, QEvent *event);
 
 public slots:
 	void DealSingleClickedVideoLabel(int chn);
@@ -136,6 +157,13 @@ public:
 	int                  user_list_cur_page_num_;
 	int                  user_list_cur_page_total_;
 	VZ_FACE_USER_RESULT  cur_group_toal_user_info_;
+
+	QString              building_map_image_path;
+	int                  place_camera_num;
+	QVector<QString>     place_camera_info_buff;
+	QVector<QString>     existed_building_map;
+	QVector<QString>     saved_person_track;
+
 
 private:
 	QMutex  get_frame_mutex_; 

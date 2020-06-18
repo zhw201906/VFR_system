@@ -1,0 +1,28 @@
+{"camera_info":[{
+  "camera_id":1,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":184,
+  "camera_position_y":215
+}
+,{
+  "camera_id":2,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":619,
+  "camera_position_y":317
+}
+,{
+  "camera_id":3,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":689,
+  "camera_position_y":223
+}
+,{
+  "camera_id":4,
+  "camera_ip":"",
+  "position_name":"豆腐干",
+  "camera_position_x":316,
+  "camera_position_y":298
+}],"camera_name":"主楼C区","camera_num":4}

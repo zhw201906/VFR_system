@@ -61,11 +61,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;$(IncludePath)</IncludePath>
+    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;./third_lib/json;$(IncludePath)</IncludePath>
     <IntDir>..\obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;$(IncludePath)</IncludePath>
+    <IncludePath>./inc;./third_lib/vz_SDK/inc;./third_lib/hr_SDK/inc;./src/facefunction;./third_lib/opencv/include;./third_lib/opencv/include/opencv;./third_lib/opencv/include/opencv2;./third_lib/json;$(IncludePath)</IncludePath>
     <IntDir>..\obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
@@ -158,6 +158,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="src\facefunction\face_operation.cpp" />
+    <ClCompile Include="third_lib\json\jsoncpp.cpp" />
     <ClCompile Include="VFR_system.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,7 +173,10 @@
     <QtRcc Include="VFR_system.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="third_lib\json\json-forwards.h" />
+    <ClInclude Include="third_lib\json\json.h" />
     <QtMoc Include="DealBuildingMap.h" />
+    <ClInclude Include="comDefine.h" />
     <ClInclude Include="src\facefunction\face_operation.h" />
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />

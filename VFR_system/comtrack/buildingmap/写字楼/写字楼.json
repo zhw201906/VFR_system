@@ -1,0 +1,35 @@
+{"camera_info":[{
+  "camera_id":1,
+  "camera_ip":"",
+  "camera_name":"给答复",
+  "camera_position_x":168,
+  "camera_position_y":194
+}
+,{
+  "camera_id":2,
+  "camera_ip":"",
+  "camera_name":"到手飞",
+  "camera_position_x":682,
+  "camera_position_y":220
+}
+,{
+  "camera_id":3,
+  "camera_ip":"",
+  "camera_name":"大概",
+  "camera_position_x":392,
+  "camera_position_y":215
+}
+,{
+  "camera_id":4,
+  "camera_ip":"",
+  "camera_name":"",
+  "camera_position_x":320,
+  "camera_position_y":302
+}
+,{
+  "camera_id":5,
+  "camera_ip":"",
+  "camera_name":"立体",
+  "camera_position_x":447,
+  "camera_position_y":387
+}],"camera_name":"写字楼","camera_num":5}

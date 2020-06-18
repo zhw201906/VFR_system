@@ -1,0 +1,28 @@
+{"camera_info":[{
+  "camera_id":1,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":215,
+  "camera_position_y":200
+}
+,{
+  "camera_id":2,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":447,
+  "camera_position_y":264
+}
+,{
+  "camera_id":3,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":634,
+  "camera_position_y":318
+}
+,{
+  "camera_id":4,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":685,
+  "camera_position_y":217
+}],"camera_name":"臻识科技","camera_num":4}
