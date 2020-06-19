@@ -123,5 +123,20 @@
     <ClInclude Include="third_lib\json\json-forwards.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="third_lib\vz_SDK\inc\VzBoxClientSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\vz_SDK\inc\VzClientSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\vz_SDK\inc\VzClientSDKDefine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\vz_SDK\inc\VzFaceClientSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_lib\vz_SDK\inc\VzLPRClientSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

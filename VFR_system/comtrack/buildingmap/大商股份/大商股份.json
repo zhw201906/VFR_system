@@ -1,0 +1,35 @@
+{"camera_info":[{
+  "camera_id":1,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":187,
+  "camera_position_y":209
+}
+,{
+  "camera_id":2,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":261,
+  "camera_position_y":252
+}
+,{
+  "camera_id":3,
+  "camera_ip":"",
+  "position_name":"",
+  "camera_position_x":321,
+  "camera_position_y":304
+}
+,{
+  "camera_id":4,
+  "camera_ip":"",
+  "position_name":"扶梯口",
+  "camera_position_x":446,
+  "camera_position_y":265
+}
+,{
+  "camera_id":5,
+  "camera_ip":"",
+  "position_name":"电梯口",
+  "camera_position_x":617,
+  "camera_position_y":220
+}],"camera_name":"大商股份","camera_num":5}

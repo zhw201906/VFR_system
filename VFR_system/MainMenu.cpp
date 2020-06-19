@@ -356,7 +356,8 @@ void MainMenu::DealOpenVzbox()
 	ui.lineEdit_password->setEnabled(false);
 	ui.lineEdit_userName->setEnabled(false);
 
-	RefreshCameraList();
+	UpdateConnectedCameraInfoMap();
+	RefreshDisplayCameraList();
 	RefreshVideoDisplayWindow();
 }
 
@@ -384,8 +385,8 @@ void MainMenu::DealCloseVzbox()
 	ClearVideoFrameCache();
 }
 
-//刷新相机列表
-void MainMenu::RefreshCameraList()
+//刷新相机列表（在线监控列表）
+void MainMenu::RefreshDisplayCameraList()
 {
 	VZ_BOX_CAM_GROUP camera_list;
 	int ret = VzClient_GetCamGroupParam(vzbox_handle_, &camera_list);
@@ -395,7 +396,6 @@ void MainMenu::RefreshCameraList()
 		return;
 	}
 
-	qDebug() << camera_list.cam_count;
 	camera_list_buff.clear();
 	ui.listWidget_CameraList->clear();
 
@@ -750,9 +750,9 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	for (int i = 0; i < cur_group_toal_user_info_.face_count; i++)
 	{
 		QImage img;
-		char face_path[100] = { 0 };
-		sprintf(face_path, "faceImageCache/%d.jpg", cur_group_toal_user_info_.face_items[i].pic_index);
-		FILE *face_data = fopen(face_path, "wb+");
+		QString face_path(OPEN_IMAGE_DIR);
+		face_path.append(QString("/face%1.jpg").arg(cur_group_toal_user_info_.face_items[i].pic_index));
+		FILE *face_data = fopen(face_path.toStdString().c_str(), "wb+");
 		if (face_data)
 		{
 			int pFaceSize = 1024 * 1024;
@@ -797,9 +797,10 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 //载入建筑平面图照片
 void MainMenu::LoadBuildingMapImage()
 {
+	ResetCreateNewBuildingMap();
 	QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
 		tr("Images (*.png *.jpg);; All files (*.*)"));
-
+	
 	if (!img_path.isEmpty())
 	{
 		ui.label_buildingMap->CleanSelectedBuildingMap();
@@ -1070,6 +1071,130 @@ void MainMenu::LoadExistedBuildingMap(const QString &select)
 	ui.label_buildingMap->DealSelectedBuildingMap(camera_info);
 }
 
+//更新已连接的相机map
+void MainMenu::UpdateConnectedCameraInfoMap()
+{
+	if (vzbox_handle_ == NULL)
+	{
+		return;
+	}
+
+	VZ_BOX_CAM_GROUP camera_list;
+	int ret = VzClient_GetCamGroupParam(vzbox_handle_, &camera_list);
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << QString::fromLocal8Bit("获取相机属性失败");
+		return;
+	}
+
+	connected_camera_map.clear();
+
+	for (int i = 0; i < camera_list.cam_count; ++i)
+	{
+		QString cam_ip(camera_list.cam_items[i].ip);
+		CameraAttribute cam_attri;
+		cam_attri.camera_id = 0;
+
+		strcpy(cam_attri.camera_item.ip, camera_list.cam_items[i].ip);
+		strcpy(cam_attri.camera_item.username, camera_list.cam_items[i].username);
+		strcpy(cam_attri.camera_item.password, camera_list.cam_items[i].password);
+		strcpy(cam_attri.camera_item.rtsp_url, camera_list.cam_items[i].rtsp_url);
+		strcpy(cam_attri.camera_item.rtsp_url_sub, camera_list.cam_items[i].rtsp_url_sub);
+
+		cam_attri.camera_item.http_port = camera_list.cam_items[i].http_port;
+		cam_attri.camera_item.rtsp_port = camera_list.cam_items[i].rtsp_port;
+		cam_attri.channel_id = camera_list.cam_items[i].chn_id;
+
+		connected_camera_map[cam_ip] = cam_attri;
+	}
+	UpdateConnectedCameraIpList();
+}
+
+//刷新已连接相机IP列表
+void MainMenu::UpdateConnectedCameraIpList()
+{
+	camera_list_buff.clear();
+
+	auto it = connected_camera_map.begin();
+	while (it != connected_camera_map.end())
+	{
+		camera_list_buff.push_back(it.key());
+		++it;
+	}
+}
+
+//读取相机配置信息文件
+void MainMenu::ReadCameraConfigParamFile()
+{
+	QString save_path = QString(BUILDING_MAP_FILE_PATH);// + QString('\\') + building_map_name;
+	QDir dir;
+	if (!dir.exists(save_path))   //目录不存在时，创建目录
+	{
+		bool res = dir.mkpath(save_path);
+	}
+	else
+	{
+		//msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图%1已存在，请重新设置！").arg(building_map_name));
+		return;
+	}
+}
+
+//保存相机配置文件
+void MainMenu::SaveCameraConfigParamFile()
+{
+	QString cam_cfg = QString(CAMERA_CONFIG_PARAM_PATH) + QString('/') + QString(CAMERA_CONFIG_PARAM_NAME);
+	QFile file(cam_cfg);
+	file.remove();
+	bool ret = file.open(QIODevice::WriteOnly | QIODevice::Text);
+	if (!ret)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("相机配置信息保存失败！"));
+		return;
+	}
+	if (connected_camera_map.size() == 0)
+	{
+		file.close();
+		return;
+	}
+
+	QString jcam_cfg;
+	jcam_cfg.append(QString("{\n  \"camera_num\":%1,").arg(connected_camera_map.size()));
+	jcam_cfg.append("\n  \"camera_attribute\":[{");
+	QMap<QString, CameraAttribute>::iterator it = connected_camera_map.begin();
+	while (it != connected_camera_map.end())
+	{
+		if (it == connected_camera_map.begin())
+		{
+			jcam_cfg.append(QString("\n    \"cam_id\":%1,").arg(it.value().camera_id));
+		}
+		else
+		{
+			jcam_cfg.append(QString(",\n  {\n    \"cam_id\":%1,").arg(it.value().camera_id));
+		}
+
+		jcam_cfg.append(QString("\n    \"chn_id\":%1,").arg(it.value().channel_id));
+		jcam_cfg.append(QString("\n    \"http_port\":%1,").arg(it.value().camera_item.http_port));
+		jcam_cfg.append(QString("\n    \"cam_ip\":\"%1\",").arg(it.key()));
+		jcam_cfg.append(QString("\n    \"cam_name\":\"%1\",").arg(QString(it.value().camera_item.name)));
+		jcam_cfg.append(QString("\n    \"cam_type\":\"%1\",").arg(it.value().camera_item.type));
+		jcam_cfg.append(QString("\n    \"user_name\":\"%1\",").arg(it.value().camera_item.username));
+		jcam_cfg.append(QString("\n    \"password\":\"%1\",").arg(it.value().camera_item.password));
+		jcam_cfg.append(QString("\n    \"rtsp_url\":\"%1\",").arg(it.value().camera_item.rtsp_url));
+		jcam_cfg.append(QString("\n    \"rtsp_url_sub\":\"%1\"}").arg(it.value().camera_item.rtsp_url_sub));
+
+		++it;
+	}
+	jcam_cfg.append("\n  ]\n}");
+	file.write(jcam_cfg.toUtf8());
+	file.close();
+}
+
+//刷新显示已连接相机的列表（相机管理界面）
+void MainMenu::RefreshDisplayConnectedCameraWidget()
+{
+
+}
+
 //创建智能测试引擎
 void MainMenu::CreateAItestEngine()
 {
@@ -1138,7 +1263,6 @@ void MainMenu::DealFaceCompare()
     feature_copy.feature = (MByte*)malloc(feature.featureSize);
     memcpy(feature_copy.feature, feature.feature, feature.featureSize);
     feature_copy.featureSize = feature.featureSize;
-
 
     IplImage* img2 = cvLoadImage(comparePath2.toLocal8Bit());
     if (img2 == NULL)

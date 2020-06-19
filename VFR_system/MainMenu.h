@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QVector>
 #include <QQueue>
+#include <QMap>
 #include <QMutex>
 #include <QMutexLocker>
 #include <functional> 
@@ -35,21 +36,24 @@
 
 #define  CAMERA_POSITION_SIZE  20
 
-#define  OPEN_IMAGE_DIR   "./faceImageCache"
 
-#define  BUILDING_MAP_FILE_PATH  "./comtrack/buildingmap"
-#define  PERSON_TRACK_FILE_PATH  "./comtrack/persontrack"
 
-typedef struct user_group_info {
+typedef struct {
 
 
 }UserGroupInfo;
 
 
-typedef struct user_info {
+typedef struct {
 
 
 }UserInfo;
+
+typedef struct {
+	int camera_id;
+	int channel_id;
+	VZ_BOX_CAM_INFO camera_item;
+}CameraAttribute;
 
 class MainMenu : public QWidget
 {
@@ -63,7 +67,7 @@ public:
     void SetIconInit();
 	void DealOpenVzbox();
 	void DealCloseVzbox();
-	void RefreshCameraList();
+	void RefreshDisplayCameraList();
 
 	void RefreshVideoDisplayWindow();
 	void RefreshVideoDisplayStyle();
@@ -102,6 +106,12 @@ public:
 	void UpdateSavedPersonTrackList();
 	void LoadExistedBuildingMap(const QString &str);
 
+
+	void UpdateConnectedCameraInfoMap();
+	void UpdateConnectedCameraIpList();
+	void ReadCameraConfigParamFile();
+	void SaveCameraConfigParamFile();
+	void RefreshDisplayConnectedCameraWidget();
 
 
     void CreateAItestEngine();
@@ -164,6 +174,8 @@ public:
 	QVector<QString>     existed_building_map;
 	QVector<QString>     saved_person_track;
 
+	//typedef  VZ_BOX_CAM_GROUP  CameraAttribute;
+	QMap<QString, CameraAttribute> connected_camera_map;    //记录已连接的相机IP--->attribute
 
 private:
 	QMutex  get_frame_mutex_; 

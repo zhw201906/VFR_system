@@ -175,6 +175,11 @@
   <ItemGroup>
     <ClInclude Include="third_lib\json\json-forwards.h" />
     <ClInclude Include="third_lib\json\json.h" />
+    <ClInclude Include="third_lib\vz_SDK\inc\VzBoxClientSDK.h" />
+    <ClInclude Include="third_lib\vz_SDK\inc\VzClientSDK.h" />
+    <ClInclude Include="third_lib\vz_SDK\inc\VzClientSDKDefine.h" />
+    <ClInclude Include="third_lib\vz_SDK\inc\VzFaceClientSDK.h" />
+    <ClInclude Include="third_lib\vz_SDK\inc\VzLPRClientSDK.h" />
     <QtMoc Include="DealBuildingMap.h" />
     <ClInclude Include="comDefine.h" />
     <ClInclude Include="src\facefunction\face_operation.h" />
