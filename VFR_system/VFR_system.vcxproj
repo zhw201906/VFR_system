@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DealBuildingMap.cpp" />
+
     <ClCompile Include="DisplayUserInfoItem.cpp" />
     <ClCompile Include="DisplayVideoLabel.cpp" />
     <ClCompile Include="DisplayVideoThread.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="third_lib\json\json.h" />
     <QtMoc Include="DealBuildingMap.h" />
     <ClInclude Include="comDefine.h" />
+
     <ClInclude Include="src\facefunction\face_operation.h" />
     <QtMoc Include="MainMenu.h" />
     <QtMoc Include="DisplayVideoLabel.h" />
