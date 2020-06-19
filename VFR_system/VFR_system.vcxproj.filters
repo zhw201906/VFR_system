@@ -53,7 +53,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="third_lib\json\jsoncpp.cpp">
-
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,7 +73,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="DealBuildingMap.h">
-
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

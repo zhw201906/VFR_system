@@ -103,9 +103,6 @@
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
      <property name="currentIndex">
       <number>4</number>
      </property>
@@ -139,8 +136,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>98</width>
-                  <height>28</height>
+                  <width>16</width>
+                  <height>16</height>
                  </rect>
                 </property>
                </widget>
@@ -1455,108 +1452,6 @@
      </widget>
      <widget class="QWidget" name="stackPath">
       <layout class="QGridLayout" name="gridLayout_9">
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox_11">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>新建地图</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_8">
-          <property name="leftMargin">
-           <number>5</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>5</number>
-          </property>
-          <property name="bottomMargin">
-           <number>5</number>
-          </property>
-          <item row="0" column="0" colspan="2">
-           <widget class="QPushButton" name="pushButton_loadMapImage">
-            <property name="text">
-             <string>载入文件</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="pushButton_placeCamera">
-            <property name="text">
-             <string>放置相机</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>选择相机：</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1" colspan="2">
-           <widget class="QComboBox" name="comboBox_cameraList">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_21">
-            <property name="text">
-             <string>位置名称：</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1" colspan="2">
-           <widget class="QLineEdit" name="lineEdit_cameraPositionName">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0" colspan="3">
-           <widget class="QTextBrowser" name="textBrowser_placeCameraInfo"/>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>地图名称：</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="lineEdit_newMapName">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="2">
-           <widget class="QPushButton" name="pushButton_saveNewMap">
-            <property name="text">
-             <string>保存地图</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QGroupBox" name="groupBox_12">
          <property name="title">
@@ -1581,27 +1476,18 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_16">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>5</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
              <item>
-              <widget class="QPushButton" name="pushButton_loadExistMap">
+              <widget class="QLabel" name="label_6">
                <property name="text">
                 <string>选择地图：</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_loadExistTrack">
+              <widget class="QComboBox" name="comboBox_existedBuindingMap"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_deleteExistBuildingMap">
                <property name="text">
                 <string>删除地图</string>
                </property>
@@ -1638,18 +1524,17 @@
               </spacer>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEdit_searchUserTrack">
+              <widget class="QLineEdit" name="lineEdit_searchPersonTrack">
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
-                 <height>30</height>
+                 <width>200</width>
+                 <height>0</height>
                 </size>
                </property>
               </widget>
              </item>
              <item>
-
-              <widget class="QPushButton" name="pushButton_searchUserTrack">
+              <widget class="QPushButton" name="pushButton_drawPersonTrack">
                <property name="text">
                 <string>绘制轨迹图</string>
                </property>
@@ -1664,7 +1549,6 @@
              </item>
              <item>
               <widget class="QPushButton" name="pushButton_savePersonTrack">
-
                <property name="text">
                 <string>保存轨迹图</string>
                </property>
@@ -1674,9 +1558,7 @@
            </widget>
           </item>
           <item>
-
-           <widget class="BuildingMapLabel" name="label_showBuildingMap">
-
+           <widget class="DealBuildingMap" name="label_buildingMap">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
               <horstretch>0</horstretch>
@@ -2579,7 +2461,6 @@ p, li { white-space: pre-wrap; }
    <class>DealBuildingMap</class>
    <extends>QLabel</extends>
    <header>dealbuildingmap.h</header>
-
   </customwidget>
  </customwidgets>
  <resources/>

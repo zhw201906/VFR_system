@@ -12,7 +12,6 @@
 #include <functional> 
 #include <QImage>
 #include <QFileDialog>
-#include <QPoint>
 
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
@@ -36,7 +35,7 @@
 
 #define  CAMERA_POSITION_SIZE  20
 
-#define  OPEN_IMAGE_DIR   "d:/test_image"
+#define  OPEN_IMAGE_DIR   "./faceImageCache"
 
 #define  BUILDING_MAP_FILE_PATH  "./comtrack/buildingmap"
 #define  PERSON_TRACK_FILE_PATH  "./comtrack/persontrack"
@@ -120,7 +119,6 @@ protected:
 	void closeEvent(QCloseEvent *event);
 	bool eventFilter(QObject *watched, QEvent *event);
 
-
 public slots:
 	void DealSingleClickedVideoLabel(int chn);
 	void DealDoubleClickedVideoLabel(int chn);
@@ -174,7 +172,6 @@ private:
     QString comparePath2;
     QString detectPath;
     QString recognizePath;
-    QString newBuildingMapPath;
 
     cv::Mat detectImage;
     cv::Mat recognizeImage;

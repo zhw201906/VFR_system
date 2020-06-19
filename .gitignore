@@ -4,3 +4,6 @@
 /x64/
 /.vs/
 /VFR_system/Resources/
+/VFR_system/Debug/
+/VFR_system/faceImageCache/
+/VFR_system/comtrack/

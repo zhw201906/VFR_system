@@ -29,7 +29,6 @@
 <QMake_QMAKE_XSPEC_>win32-msvc</QMake_QMAKE_XSPEC_>
 <QMake_QMAKE_VERSION_>3.1</QMake_QMAKE_VERSION_>
 <QMake_QT_VERSION_>5.14.1</QMake_QT_VERSION_>
-
 <Qt_INCLUDEPATH_
       >$(Qt_INCLUDEPATH_);Release\moc;Release\uic</Qt_INCLUDEPATH_>
     <QtBkup_QtInstall
@@ -54,6 +53,5 @@
     <QtVersionMajor>5</QtVersionMajor>
     <QtVersionMinor>14</QtVersionMinor>
     <QtVersionPatch>1</QtVersionPatch>
-
   </PropertyGroup>
 </Project>
