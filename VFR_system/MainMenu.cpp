@@ -32,7 +32,6 @@ static void Geometric_Scaling_Image(const QString path, const int control_width,
     dst_pix = pix;
 }
 
-
 static bool YUV420ToBGR24(unsigned char* pY, unsigned char* pU, unsigned char* pV, unsigned char* pRGB24, int width, int height)
 {
 	int yIdx, uIdx, vIdx, idx;
@@ -87,33 +86,60 @@ MainMenu::MainMenu(QWidget *parent)
 		//初始化显示图标
 		SetIconInit();
 		ChangeSystemMode(0);
+        CleanAllSetSystemModeButton();
+        ui.pushButton_onlineMonitoring->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+        ui.pushButton_onlineMonitoring->setEnabled(false);
 
 		//通过按钮切换系统功能
 		connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(0);
 			RefreshVideoDisplayWindow();
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_onlineMonitoring->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_onlineMonitoring->setEnabled(false);
 		});
 
 		connect(ui.pushButton_cameraManage, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(1);
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_cameraManage->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_cameraManage->setEnabled(false);
 		});
 
 		connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(2);
 			RefreshUserGroupList();
 			RefreshUserInfoList();
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_libraryManage->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_libraryManage->setEnabled(false);
 		});
 
 		connect(ui.pushButton_snapResult, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(3);
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_snapResult->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_snapResult->setEnabled(false);
 		});
 
 		connect(ui.pushButton_trackPath, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(4);
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_trackPath->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_trackPath->setEnabled(false);
 		});
 
 		connect(ui.pushButton_smartTest, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(5);
+
+            CleanAllSetSystemModeButton();
+            ui.pushButton_smartTest->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+            ui.pushButton_smartTest->setEnabled(false);
 		});
 	}
 
@@ -189,8 +215,14 @@ MainMenu::MainMenu(QWidget *parent)
     
 /**************************************************相机配置界面********************************************************/
 	{
-		
-		
+        p_add_camera_ui = NULL;
+
+        connect(ui.listWidget_cameraManageList, &QListWidget::itemClicked, this, &MainMenu::CurrentSelectCameraItem);
+        connect(ui.toolButton_addCamera, &QPushButton::clicked, this, &MainMenu::AddOneConnectCamera);
+        connect(ui.toolButton_editCamera, &QPushButton::clicked, this, &MainMenu::ModifySelectedCamera);
+        connect(ui.toolButton_delCamera, &QPushButton::clicked, this, &MainMenu::DeleteSelectedCamera);
+        connect(ui.toolButton_refreshCamera, &QPushButton::clicked, this, &MainMenu::UpdateConnectedCameraInfoMap);
+
 	}
 
 /***************************************************人脸库界面********************************************************/
@@ -199,6 +231,7 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
 		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
 
+        p_operator_user_ui = NULL;
 		p_user_info_item = NULL;
 		p_user_list_item = NULL;
 		p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
@@ -221,6 +254,10 @@ MainMenu::MainMenu(QWidget *parent)
 				DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
 			}
 		});
+
+        connect(ui.pushButton_addOneUser, &QPushButton::clicked, this, &MainMenu::AddOneUserInformation);
+        connect(ui.pushButton_modifyUser, &QPushButton::clicked, this, &MainMenu::ModifyOneUserInformation);
+
 	}
 
 /**************************************************抓拍查询界面********************************************************/
@@ -254,7 +291,12 @@ MainMenu::MainMenu(QWidget *parent)
         ui.treeWidget_detectResult->setHeaderLabels(QStringList() << QString::fromLocal8Bit("属性") << QString::fromLocal8Bit("详细信息"));
         ui.treeWidget_recognizeResult->setHeaderLabels(QStringList() << QString::fromLocal8Bit("属性") << QString::fromLocal8Bit("详细信息"));
 
+        ui.pushButton_viewRecognizeResult->setEnabled(false);
+        ui.pushButton_viewDetectResult->setEnabled(false);
+
         CreateAItestEngine();
+        p_display_recognize_ui = NULL;       
+        p_display_detect_ui = NULL;
 
         connect(ui.pushButton_loadCompareImage1,  &QPushButton::clicked, this, &MainMenu::LoadCompareImg1);
         connect(ui.pushButton_loadCompareImage2,  &QPushButton::clicked, this, &MainMenu::LoadCompareImg2);
@@ -263,6 +305,8 @@ MainMenu::MainMenu(QWidget *parent)
         connect(ui.pushButton_detectFace,         &QPushButton::clicked, this, &MainMenu::DealFaceDetect);
         connect(ui.pushButton_loadRecognizeImage, &QPushButton::clicked, this, &MainMenu::LoadRecognizeImg);
         connect(ui.pushButton_recognizeFace,      &QPushButton::clicked, this, &MainMenu::DealFaceRecognize);
+        connect(ui.pushButton_viewDetectResult,   &QPushButton::clicked, this, &MainMenu::ShowFaceDetectResult);
+        connect(ui.pushButton_viewRecognizeResult,&QPushButton::clicked, this, &MainMenu::ShowFaceRecognizeResult);
 	}
 }
 
@@ -281,6 +325,20 @@ MainMenu::~MainMenu()
 		delete[]video_display_label;
 		video_display_label = NULL;
 	}
+
+    if (p_display_recognize_ui != NULL)
+    {
+        delete p_display_recognize_ui;
+        p_display_recognize_ui = NULL;
+        ui.pushButton_viewRecognizeResult->setEnabled(false);
+    }
+
+    if (p_display_detect_ui != NULL)
+    {
+        ui.pushButton_viewDetectResult->setEnabled(false);
+        delete p_display_detect_ui;
+        p_display_detect_ui = NULL;
+    }
 }
 
 //设置按钮图标
@@ -380,31 +438,25 @@ void MainMenu::DealCloseVzbox()
 
 	video_show_timer_.stop();
 	ui.listWidget_CameraList->clear();	
+    connected_camera_map.clear();
 	camera_list_buff.clear();
 	CloseAllVideoDisplay();
 	ClearVideoFrameCache();
 }
 
-//刷新相机列表（在线监控列表）
+//刷新显示的相机列表（同时刷新在线监控和相机管理界面）
 void MainMenu::RefreshDisplayCameraList()
 {
-	VZ_BOX_CAM_GROUP camera_list;
-	int ret = VzClient_GetCamGroupParam(vzbox_handle_, &camera_list);
-	if (ret != VZSDK_SUCCESS)
-	{
-		qDebug() << QString::fromLocal8Bit("获取相机列表失败");
-		return;
-	}
-
-	camera_list_buff.clear();
 	ui.listWidget_CameraList->clear();
+    ui.listWidget_cameraManageList->clear();
 
-	for (int i = 0; i < camera_list.cam_count; ++i)
-	{
-		qDebug() << "list:" << camera_list.cam_items[i].ip;
-		camera_list_buff.push_back(QString(camera_list.cam_items[i].ip));
-		ui.listWidget_CameraList->addItem(camera_list_buff[i]);
-	}	
+    auto it = camera_list_buff.begin();
+    while (camera_list_buff.end() != it)
+    {
+        ui.listWidget_CameraList->addItem(*it);
+        ui.listWidget_cameraManageList->addItem(*it);
+        it++;
+    }
 }
 
 //刷新视频显示窗口（显示样式）
@@ -659,6 +711,24 @@ void MainMenu::ChangeSystemMode(int index)
     ui.stackedWidget_systemMode->setCurrentIndex(index);
 }
 
+//将设置系统模式的按钮全部清空
+void MainMenu::CleanAllSetSystemModeButton()
+{
+    ui.pushButton_onlineMonitoring->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+    ui.pushButton_cameraManage->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+    ui.pushButton_libraryManage->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+    ui.pushButton_snapResult->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+    ui.pushButton_trackPath->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+    ui.pushButton_smartTest->setStyleSheet(SYSTEM_MODE_BUTTON_ENABLE_STYLE);
+
+    ui.pushButton_onlineMonitoring->setEnabled(true);
+    ui.pushButton_cameraManage-> setEnabled(true);
+    ui.pushButton_libraryManage->setEnabled(true);
+    ui.pushButton_snapResult->setEnabled(true);
+    ui.pushButton_trackPath->setEnabled(true);
+    ui.pushButton_smartTest->setEnabled(true);
+}
+
 //刷新人脸库列表
 void MainMenu::RefreshUserGroupList()
 {
@@ -792,6 +862,66 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共%2 页     %1 条记录    当前 %3 页").arg(cur_group_toal_user_info_.total_count)
 									.arg(user_list_cur_page_total_).arg(user_list_cur_page_num_));
 
+}
+
+//操作一个用户信息（添加一个用户或者修改用户信息，通过传参来区分）
+void MainMenu::AddOneUserInformation()
+{
+    if (p_operator_user_ui == NULL)
+    {
+        p_operator_user_ui = new UserInformationOperator(ADD_USER);
+    }
+
+    connect(p_operator_user_ui, &UserInformationOperator::OperUserInfo, this, &MainMenu::DealOperatorUserInfo);
+    connect(p_operator_user_ui, &UserInformationOperator::CancelOperUser, [=]() {
+        qDebug() << "quit add user";
+        delete p_operator_user_ui;
+        p_operator_user_ui = NULL;
+    });
+
+    p_operator_user_ui->show();
+}
+
+//修改用户信息
+void MainMenu::ModifyOneUserInformation()
+{
+    UserInfo user;
+    if (p_operator_user_ui == NULL)
+    {
+        p_operator_user_ui = new UserInformationOperator(user, MODIFY_USER);
+    }
+
+    connect(p_operator_user_ui, &UserInformationOperator::OperUserInfo, this, &MainMenu::DealOperatorUserInfo);
+    connect(p_operator_user_ui, &UserInformationOperator::CancelOperUser, [=]() {
+        qDebug() << "quit modify user";
+        delete p_operator_user_ui;
+        p_operator_user_ui = NULL;
+    });
+
+    p_operator_user_ui->show();
+}
+
+//处理操作用户信息（添加用户或者修改了用户的信息）
+void MainMenu::DealOperatorUserInfo(UserInfo & user, USER_OPER oper)
+{
+    //调用user相关SDK
+
+    //校验检测结果
+    int ret = VZSDK_FAILED;
+    if (ret != VZSDK_SUCCESS)
+    {
+        if (oper == ADD_USER)   p_operator_user_ui->ShowMessage(ADD_USER_FAILED);
+        else                    p_operator_user_ui->ShowMessage(MODIFY_USER_FAILED);
+
+        return;
+    }
+
+    if (oper == ADD_USER)   p_operator_user_ui->ShowMessage(ADD_USER_SUCCESS);
+    else                    p_operator_user_ui->ShowMessage(MODIFY_USER_SUCCESS);
+    
+    p_operator_user_ui->close();
+    delete p_operator_user_ui;
+    p_operator_user_ui = NULL;
 }
 
 //载入建筑平面图照片
@@ -1108,6 +1238,7 @@ void MainMenu::UpdateConnectedCameraInfoMap()
 		connected_camera_map[cam_ip] = cam_attri;
 	}
 	UpdateConnectedCameraIpList();
+    RefreshDisplayCameraList();
 }
 
 //刷新已连接相机IP列表
@@ -1126,22 +1257,29 @@ void MainMenu::UpdateConnectedCameraIpList()
 //读取相机配置信息文件
 void MainMenu::ReadCameraConfigParamFile()
 {
-	QString save_path = QString(BUILDING_MAP_FILE_PATH);// + QString('\\') + building_map_name;
-	QDir dir;
-	if (!dir.exists(save_path))   //目录不存在时，创建目录
-	{
-		bool res = dir.mkpath(save_path);
-	}
-	else
-	{
-		//msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图%1已存在，请重新设置！").arg(building_map_name));
-		return;
-	}
+    QString cam_cfg = QString(CAMERA_CONFIG_PARAM_PATH) + QString('/') + QString(CAMERA_CONFIG_PARAM_NAME);
+    QFile file(cam_cfg);
+    int ret = file.open(QIODevice::ReadOnly | QIODevice::Text);
+    if (!ret)
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("获取相机配置失败！"));
+        return;
+    }
+    QByteArray sinfo = file.readAll();
+    file.close();
+
+
 }
 
 //保存相机配置文件
 void MainMenu::SaveCameraConfigParamFile()
 {
+    QDir dir;
+    if (!dir.exists(QString(CAMERA_CONFIG_PARAM_PATH)))   //目录不存在时，创建目录
+    {
+        dir.mkpath(QString(CAMERA_CONFIG_PARAM_PATH));
+    }
+
 	QString cam_cfg = QString(CAMERA_CONFIG_PARAM_PATH) + QString('/') + QString(CAMERA_CONFIG_PARAM_NAME);
 	QFile file(cam_cfg);
 	file.remove();
@@ -1175,7 +1313,7 @@ void MainMenu::SaveCameraConfigParamFile()
 		jcam_cfg.append(QString("\n    \"chn_id\":%1,").arg(it.value().channel_id));
 		jcam_cfg.append(QString("\n    \"http_port\":%1,").arg(it.value().camera_item.http_port));
 		jcam_cfg.append(QString("\n    \"cam_ip\":\"%1\",").arg(it.key()));
-		jcam_cfg.append(QString("\n    \"cam_name\":\"%1\",").arg(QString(it.value().camera_item.name)));
+		jcam_cfg.append(QString("\n    \"cam_name\":\"%1\",").arg(it.value().camera_item.name));
 		jcam_cfg.append(QString("\n    \"cam_type\":\"%1\",").arg(it.value().camera_item.type));
 		jcam_cfg.append(QString("\n    \"user_name\":\"%1\",").arg(it.value().camera_item.username));
 		jcam_cfg.append(QString("\n    \"password\":\"%1\",").arg(it.value().camera_item.password));
@@ -1189,10 +1327,72 @@ void MainMenu::SaveCameraConfigParamFile()
 	file.close();
 }
 
-//刷新显示已连接相机的列表（相机管理界面）
-void MainMenu::RefreshDisplayConnectedCameraWidget()
+//当前选中的相机IP
+void MainMenu::CurrentSelectCameraItem(QListWidgetItem * item)
+{
+    cur_selected_camera_ip = item->text();
+    auto it = connected_camera_map.find(cur_selected_camera_ip);
+    if (it == connected_camera_map.end())
+    {
+        return;
+    }
+
+    //将相机参数加载到界面中
+    ui.lineEdit_cameraManageId->setText(QString("%1").arg(it.value().camera_id));
+    ui.lineEdit_cameraManageChannel->setText(QString("%1").arg(it.value().channel_id));
+    ui.lineEdit_cameraManageIp->setText(QString(it.key()));
+    ui.lineEdit_cameraManageHttpPort->setText(QString("%1").arg(it.value().camera_item.http_port));
+    ui.comboBox_protocolType->setCurrentText(QString(it.value().camera_item.type));
+    ui.lineEdit_cameraManageUserName->setText(QString(it.value().camera_item.username));
+    ui.lineEdit_cameraManagePassword->setText(QString(it.value().camera_item.password));
+    ui.lineEdit_cameraRtspAddress->setText(QString(it.value().camera_item.rtsp_url));
+    ui.lineEdit_cameraRtspSubAddress->setText(QString(it.value().camera_item.rtsp_url_sub));
+
+}
+
+//添加一个相机
+void MainMenu::AddOneConnectCamera()
+{
+    if (p_add_camera_ui == NULL)
+    {
+        p_add_camera_ui = new AddCamera;
+    }
+    connect(p_add_camera_ui, &AddCamera::CancelAddCamera, [=]() {
+        delete p_add_camera_ui;
+        p_add_camera_ui = NULL;
+    });
+    connect(p_add_camera_ui, &AddCamera::ConnectAddCamera, this, &MainMenu::CheckAddCameraIsExisted);
+    p_add_camera_ui->show();
+
+}
+
+//校验添加的相机是否存在
+void MainMenu::CheckAddCameraIsExisted(CameraAttribute & cam_param)
 {
 
+    //假如校验成功
+    p_add_camera_ui->ShowMessage(ADD_CAMERA_SUCCESS);
+    p_add_camera_ui->close();
+    delete p_add_camera_ui;
+    p_add_camera_ui = NULL;
+    UpdateConnectedCameraInfoMap();
+    SaveCameraConfigParamFile();
+}
+
+//修改已连接的相机
+void MainMenu::ModifySelectedCamera()
+{
+
+    //修改相机参数后刷新相机列表
+    UpdateConnectedCameraInfoMap();
+}
+
+//删除已连接的相机
+void MainMenu::DeleteSelectedCamera()
+{
+
+    //删除相机后刷新相机列表
+    UpdateConnectedCameraInfoMap();
 }
 
 //创建智能测试引擎
@@ -1299,12 +1499,18 @@ void MainMenu::LoadDetectImg()
         QPixmap pix;
         Geometric_Scaling_Image(detectPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
         ui.label_detectImage->setPixmap(pix);
-        //ui.toolButton_compareFaceResult->setText(" ");
     }
     else
     {
         ui.label_detectImage->clear();
         detectPath.clear();
+    }
+
+    if (p_display_detect_ui != NULL)
+    {
+        ui.pushButton_viewDetectResult->setEnabled(false);
+        delete p_display_detect_ui;
+        p_display_detect_ui = NULL;
     }
 }
 
@@ -1314,13 +1520,7 @@ void MainMenu::DealFaceDetect()
     qDebug() << QString::fromLocal8Bit("人脸检测");
 
     ui.treeWidget_detectResult->clear();
-
-    //if (display_detect_result_ != NULL)
-    //{
-    //    delete display_detect_result_;
-    //    display_detect_result_ = NULL;
-    //}
-
+  
     IplImage* img = cvLoadImage(detectPath.toLocal8Bit());
     if (img == NULL)
     {
@@ -1331,12 +1531,13 @@ void MainMenu::DealFaceDetect()
     FaceDetectResult face_detect_result;
     int res = pFaceEngine->FacesDetectTask(img, &face_detect_result, detectImage);
 
-    QString detPath = "./faceImageCache/detectImage.jpg";
+    QString detPath = QString(FACE_IMAGE_CACHE_PATH) + "/detectImage.jpg";
     cv::imwrite(detPath.toStdString(), detectImage);
-    ui.label_detectImage->clear();
-    QPixmap pix;
-    Geometric_Scaling_Image(detPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
-    ui.label_detectImage->setPixmap(pix);
+    detectPath = detPath;
+    //ui.label_detectImage->clear();
+    //QPixmap pix;
+    //Geometric_Scaling_Image(detPath, ui.label_detectImage->width(), ui.label_detectImage->height(), pix);
+    //ui.label_detectImage->setPixmap(pix);
 
     QTreeWidgetItem *num_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("人脸个数")
         << QString::number(face_detect_result.detectInfo.faceNum));
@@ -1409,6 +1610,18 @@ void MainMenu::DealFaceDetect()
     }
     //ui.button_display_result->setEnabled(true);
     cvReleaseImage(&img);
+    ui.pushButton_viewDetectResult->setEnabled(true);
+}
+
+//显示人脸检测大图
+void MainMenu::ShowFaceDetectResult()
+{
+    if (p_display_detect_ui == NULL)
+    {
+        p_display_detect_ui = new DisplayDetectResult(detectPath);   //这里需要传参，识别结果图像
+    }
+
+    p_display_detect_ui->show();
 }
 
 //载入人脸识别图片
@@ -1430,11 +1643,31 @@ void MainMenu::LoadRecognizeImg()
         ui.label_recognizeImage->clear();
         recognizePath.clear();
     }
+
+    if (p_display_recognize_ui != NULL)
+    {
+        delete p_display_recognize_ui;
+        p_display_recognize_ui = NULL;
+        ui.pushButton_viewRecognizeResult->setEnabled(false);
+    }
 }
 
 //人脸识别处理
 void MainMenu::DealFaceRecognize()
 {
+
+    ui.pushButton_viewRecognizeResult->setEnabled(true);
+}
+
+//显示人脸识别结果
+void MainMenu::ShowFaceRecognizeResult()
+{
+    if (p_display_recognize_ui == NULL)
+    {
+        p_display_recognize_ui = new DisplayRecognizeResult;   //这里需要传参，识别结果数据
+    }
+
+    p_display_recognize_ui->show();
 }
 
 //绘制系统背景

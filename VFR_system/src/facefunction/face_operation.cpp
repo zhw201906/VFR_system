@@ -99,7 +99,7 @@ MRESULT FACE_OPERATION_ENGINE::FacesDetectTask(IplImage* src, FaceDetectResult *
 		int height = detectResult->detectInfo.faceRect[i].bottom - detectResult->detectInfo.faceRect[i].top;
 		cv::Rect rect(detectResult->detectInfo.faceRect[i].left, detectResult->detectInfo.faceRect[i].top, width, height);
 
-		cv::rectangle(img, rect, cv::Scalar(0, 0, 255), 1, 8, 0);
+		cv::rectangle(img, rect, cv::Scalar(0, 255, 0), 1, 8, 0);
 		char label_text[30] = { 0 };
 		sprintf(label_text, "%d", i + 1);
 		std::string label(label_text);

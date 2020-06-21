@@ -55,6 +55,24 @@
     <ClCompile Include="third_lib\json\jsoncpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AddCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserInformationOperator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayRecognizeResult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayRecgFaceImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayDetectResult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeAdjustImageLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -75,6 +93,24 @@
     <QtMoc Include="DealBuildingMap.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="AddCamera.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="UserInformationOperator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="DisplayRecognizeResult.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="DisplayRecgFaceImage.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="DisplayDetectResult.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="FreeAdjustImageLabel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="VFR_system.ui">
@@ -84,6 +120,18 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="DisplayUserInfoItem.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="AddCamera.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="UserInformationOperator.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="DisplayRecognizeResult.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="DisplayDetectResult.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -136,6 +184,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third_lib\vz_SDK\inc\VzLPRClientSDK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="comDataStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

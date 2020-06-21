@@ -1,18 +1,9 @@
 #pragma once
+#ifndef  MAIN_MENU_H_
+#define  MAIN_MENU_H_
 
 #include <QWidget>
 #include "ui_MainMenu.h"
-#include <QString>
-#include <QMessageBox>
-#include <QTimer>
-#include <QVector>
-#include <QQueue>
-#include <QMap>
-#include <QMutex>
-#include <QMutexLocker>
-#include <functional> 
-#include <QImage>
-#include <QFileDialog>
 
 #include "DisplayVideoLabel.h"
 #include "sdkHeadFile.h"
@@ -21,6 +12,10 @@
 #include "face_operation.h"
 #include "DealBuildingMap.h"
 #include "comDefine.h"
+#include "AddCamera.h"
+#include "UserInformationOperator.h"
+#include "DisplayRecognizeResult.h"
+#include "DisplayDetectResult.h"
 
 
 #define  CAMERA_NUM_LIMIT      9
@@ -42,18 +37,6 @@ typedef struct {
 
 
 }UserGroupInfo;
-
-
-typedef struct {
-
-
-}UserInfo;
-
-typedef struct {
-	int camera_id;
-	int channel_id;
-	VZ_BOX_CAM_INFO camera_item;
-}CameraAttribute;
 
 class MainMenu : public QWidget
 {
@@ -85,12 +68,15 @@ public:
 	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 
     void ChangeSystemMode(int index);
+    void CleanAllSetSystemModeButton();
 
 
 	void RefreshUserGroupList();
 	void RefreshUserInfoList();
-
 	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
+    void AddOneUserInformation();
+    void ModifyOneUserInformation();
+    void DealOperatorUserInfo(UserInfo &user, USER_OPER oper = ADD_USER);
 
 
 	void LoadBuildingMapImage();
@@ -111,7 +97,11 @@ public:
 	void UpdateConnectedCameraIpList();
 	void ReadCameraConfigParamFile();
 	void SaveCameraConfigParamFile();
-	void RefreshDisplayConnectedCameraWidget();
+    void CurrentSelectCameraItem(QListWidgetItem *item);
+    void AddOneConnectCamera();
+    void CheckAddCameraIsExisted(CameraAttribute &cam_param);
+    void ModifySelectedCamera();
+    void DeleteSelectedCamera();
 
 
     void CreateAItestEngine();
@@ -120,8 +110,10 @@ public:
     void DealFaceCompare();
     void LoadDetectImg();
     void DealFaceDetect();
+    void ShowFaceDetectResult();
     void LoadRecognizeImg();
     void DealFaceRecognize();
+    void ShowFaceRecognizeResult();
 
 protected:
     void paintEvent(QPaintEvent *event);     //绘图
@@ -154,7 +146,7 @@ public:
 
 	int     display_video_windows_num_;			//显示视频窗口的个数
 	DisplayVideoLabel  *video_display_label;	//初始化
-	QVector<QString> camera_list_buff;			//相机列表，通过IP来记录         
+	QVector<QString>   camera_list_buff;        //相机列表，通过IP来记录         
 
 
 	QTimer  video_show_timer_;
@@ -167,6 +159,9 @@ public:
 	int                  user_list_cur_page_num_;
 	int                  user_list_cur_page_total_;
 	VZ_FACE_USER_RESULT  cur_group_toal_user_info_;
+    UserInformationOperator   *p_operator_user_ui;
+
+
 
 	QString              building_map_image_path;
 	int                  place_camera_num;
@@ -174,8 +169,14 @@ public:
 	QVector<QString>     existed_building_map;
 	QVector<QString>     saved_person_track;
 
+
+
+
 	//typedef  VZ_BOX_CAM_GROUP  CameraAttribute;
 	QMap<QString, CameraAttribute> connected_camera_map;    //记录已连接的相机IP--->attribute
+    QString              cur_selected_camera_ip;
+    AddCamera            *p_add_camera_ui;
+
 
 private:
 	QMutex  get_frame_mutex_; 
@@ -187,7 +188,9 @@ private:
 
     cv::Mat detectImage;
     cv::Mat recognizeImage;
-
+    DisplayRecognizeResult  *p_display_recognize_ui;
+    DisplayDetectResult     *p_display_detect_ui;
 };
 
 
+#endif
