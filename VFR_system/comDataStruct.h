@@ -21,6 +21,20 @@ typedef struct {
 
 typedef  VZ_FACE_USER_ITEM  UserInfo;
 
+typedef struct {
+	unsigned char sex;							// 0:男，1:女，2:未知
+	unsigned char age;							// 1:少年 2:青年 3:中年 4:老年，5:未知
+	unsigned char have_hat;                     // 0:没，1:有，2:未知
+	unsigned char have_glasses;                 // 0:没，1:有，2:未知
+	//unsigned char have_mask;                    // 0:没，1:有，2:未知
+	//char age_real;								// 真实年龄
+	short confidence;			                // 置信度
+	unsigned int msec;							// 时间戳，毫秒
+	char datetime[20];							// 时间，格式：yyyy-MM-dd HH:mm:ss
+}FaceSnapInfo;
 
 
+typedef struct {
+
+}FaceRecognizeInfo;
 #endif

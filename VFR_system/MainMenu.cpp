@@ -150,10 +150,20 @@ MainMenu::MainMenu(QWidget *parent)
 		vzbox_online_status = false;
 		display_video_windows_num_ = FOUR_WINDOWS;
 		video_display_label = NULL;
+		p_snap_result_buff_ui = NULL;
+		p_snap_result_item = NULL;
 
 		ui.toolButton_oneWindow->setEnabled(true);
 		ui.toolButton_fourWindows->setEnabled(false);
 		ui.toolButton_nineWindows->setEnabled(true);
+
+		ui.listWidget_nowSnap->setViewMode(QListView::IconMode);
+		ui.listWidget_nowSnap->setResizeMode(QListWidget::Adjust);
+		ui.listWidget_nowSnap->setMovement(QListWidget::Static);
+
+		ui.listWidget_nowRecognize->setViewMode(QListView::IconMode);
+		ui.listWidget_nowRecognize->setResizeMode(QListWidget::Adjust);
+		ui.listWidget_nowRecognize->setMovement(QListWidget::Static);
 
 		//初始化显示视频窗口label
 		video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
@@ -171,12 +181,15 @@ MainMenu::MainMenu(QWidget *parent)
 			connect(&video_display_label[i], &DisplayVideoLabel::doubleClickedMouse, this, &MainMenu::DealDoubleClickedVideoLabel);
 		}
 
+		p_snap_result_buff_ui = new DisplaySnapResult[CAMERA_SNAP_RESULT_MAX_NUMS];
+		p_snap_result_item = new QListWidgetItem[CAMERA_SNAP_RESULT_MAX_NUMS];
+		p_recognize_result_buff_ui = new DisplaySnapRecognizeResult[CAMERA_SNAP_RECOGNIZE_MAX_NUMS];
+		p_recognize_result_item = new QListWidgetItem[CAMERA_SNAP_RECOGNIZE_MAX_NUMS];
+
 		//打开设备按钮
 		connect(ui.pushButton_openDev, &QPushButton::clicked, this, &MainMenu::DealOpenVzbox);
-
 		//关闭设备按钮
 		connect(ui.pushButton_closeDev, &QPushButton::clicked, this, &MainMenu::DealCloseVzbox);
-
 		//显示视频窗口
 		RefreshVideoDisplayWindow();
 
@@ -219,7 +232,7 @@ MainMenu::MainMenu(QWidget *parent)
 
         connect(ui.listWidget_cameraManageList, &QListWidget::itemClicked, this, &MainMenu::CurrentSelectCameraItem);
         connect(ui.toolButton_addCamera, &QPushButton::clicked, this, &MainMenu::AddOneConnectCamera);
-        connect(ui.toolButton_editCamera, &QPushButton::clicked, this, &MainMenu::ModifySelectedCamera);
+        connect(ui.pushButton_saveCameraManage, &QPushButton::clicked, this, &MainMenu::ModifySelectedCamera);
         connect(ui.toolButton_delCamera, &QPushButton::clicked, this, &MainMenu::DeleteSelectedCamera);
         connect(ui.toolButton_refreshCamera, &QPushButton::clicked, this, &MainMenu::UpdateConnectedCameraInfoMap);
 
@@ -339,6 +352,19 @@ MainMenu::~MainMenu()
         delete p_display_detect_ui;
         p_display_detect_ui = NULL;
     }
+
+	if (p_add_camera_ui != NULL)
+	{
+		delete p_add_camera_ui;
+		p_add_camera_ui = NULL;
+	}
+
+	if (p_operator_user_ui != NULL)
+	{
+		delete p_operator_user_ui;
+		p_operator_user_ui = NULL;
+	}
+
 }
 
 //设置按钮图标
@@ -417,6 +443,12 @@ void MainMenu::DealOpenVzbox()
 	UpdateConnectedCameraInfoMap();
 	RefreshDisplayCameraList();
 	RefreshVideoDisplayWindow();
+	int ret = VzLPRClient_SetFaceResultCallBack(vzbox_handle_, &MainMenu::CameraSnapCallBack, (void *)this);
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << "set snap callback falied...";
+		return;
+	}
 }
 
 //关闭设备
@@ -637,7 +669,7 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 	video_display_label[chnId].setStyleSheet(ClICKED_LABEL_STYLE);
 }
 
-//相机视频回调缓存
+//相机视频回调缓存（通过定时器中断回调显示，效果相对较流畅）
 void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
 {
 	int* chnnal_id = (int *)pUserData;
@@ -683,6 +715,7 @@ void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, co
 	}
 }
 
+//实时视频回调函数（传输显示label上下文，效果较差。暂时没有使用）
 void MainMenu::CameraFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
 {
 	DisplayVideoLabel* video_label = (DisplayVideoLabel *)pUserData;
@@ -703,6 +736,61 @@ void MainMenu::CameraFrameCallBack(VzLPRClientHandle handle, void * pUserData, c
 	}
 	if (frame_data)
 		free(frame_data);
+}
+
+//相机抓拍结果回调函数
+void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face_result, void * pUserData)
+{
+	static int chn_i = 0;
+	qDebug() << "snap success:" << chn_i << "  person_num:" << face_result->person_num;
+	MainMenu *p_menu = (MainMenu*)pUserData;
+	
+	//for (int i = 0; i < face_result->person_num; i++)
+	{
+		int i = 0;
+		FaceSnapInfo face_info;
+		face_info.sex = face_result->sex;
+		face_info.age = face_result->age;
+		face_info.have_glasses = face_result->have_glasses;
+		face_info.have_hat = face_result->have_hat;
+		face_info.msec = face_result->msec;
+		face_info.confidence = face_result->face_items[i].confidence;
+		strcpy(face_info.datetime, face_result->datetime);
+
+		QImage img;
+		QString face_path(CAMERA_SNAP_IMAGE_PATH);
+		face_path.append(QString("/face%1_%2.jpg").arg(i).arg(face_result->msec));
+		FILE *face_data = fopen(face_path.toStdString().c_str(), "wb+");
+		if (face_data)
+		{
+			fwrite(face_result->face_imgs[i].img_buf, sizeof(unsigned char), 
+				   face_result->face_imgs[i].img_len, face_data);
+			fclose(face_data);
+		}
+		p_menu->p_snap_result_buff_ui[chn_i].SetShowData(face_info, face_path);
+		p_menu->p_snap_result_item[chn_i].setSizeHint(SNAP_ITEM_SIZE);
+		p_menu->ui.listWidget_nowSnap->addItem(&p_menu->p_snap_result_item[chn_i]);
+		p_menu->ui.listWidget_nowSnap->setItemWidget(&p_menu->p_snap_result_item[chn_i], 
+			                                         &p_menu->p_snap_result_buff_ui[chn_i]);
+		p_menu->ui.listWidget_nowSnap->scrollToBottom();
+
+
+		//p_menu->p_recognize_result_buff_ui[chn_i].SetShowRecognizeResult(face_info, face_path);
+		p_menu->p_recognize_result_item[chn_i].setSizeHint(SNAP_RECG_ITEM_SIZE);
+		p_menu->ui.listWidget_nowRecognize->addItem(&p_menu->p_recognize_result_item[chn_i]);
+		p_menu->ui.listWidget_nowRecognize->setItemWidget(&p_menu->p_recognize_result_item[chn_i],
+			&p_menu->p_recognize_result_buff_ui[chn_i]);
+		p_menu->ui.listWidget_nowRecognize->scrollToBottom();
+
+
+
+		chn_i++;
+		if (chn_i >= CAMERA_SNAP_RESULT_MAX_NUMS)
+		{
+			chn_i = 0;
+			//p_menu->ui.listWidget_nowSnap->clear();
+		}
+	}
 }
 
 //切换系统功能模式（通过索引切换）
@@ -1218,7 +1306,6 @@ void MainMenu::UpdateConnectedCameraInfoMap()
 	}
 
 	connected_camera_map.clear();
-
 	for (int i = 0; i < camera_list.cam_count; ++i)
 	{
 		QString cam_ip(camera_list.cam_items[i].ip);
@@ -1230,15 +1317,19 @@ void MainMenu::UpdateConnectedCameraInfoMap()
 		strcpy(cam_attri.camera_item.password, camera_list.cam_items[i].password);
 		strcpy(cam_attri.camera_item.rtsp_url, camera_list.cam_items[i].rtsp_url);
 		strcpy(cam_attri.camera_item.rtsp_url_sub, camera_list.cam_items[i].rtsp_url_sub);
+		strcpy(cam_attri.camera_item.type, camera_list.cam_items[i].type);
 
 		cam_attri.camera_item.http_port = camera_list.cam_items[i].http_port;
 		cam_attri.camera_item.rtsp_port = camera_list.cam_items[i].rtsp_port;
 		cam_attri.channel_id = camera_list.cam_items[i].chn_id;
+		cam_attri.camera_item.enable_snaps = camera_list.cam_items[i].enable_snaps;
+		cam_attri.camera_item.enable_video = camera_list.cam_items[i].enable_video;
 
 		connected_camera_map[cam_ip] = cam_attri;
 	}
 	UpdateConnectedCameraIpList();
     RefreshDisplayCameraList();
+	ReadCameraConfigParamFile();
 }
 
 //刷新已连接相机IP列表
@@ -1257,8 +1348,8 @@ void MainMenu::UpdateConnectedCameraIpList()
 //读取相机配置信息文件
 void MainMenu::ReadCameraConfigParamFile()
 {
-    QString cam_cfg = QString(CAMERA_CONFIG_PARAM_PATH) + QString('/') + QString(CAMERA_CONFIG_PARAM_NAME);
-    QFile file(cam_cfg);
+    QString cam_cfg_path = QString(CAMERA_CONFIG_PARAM_PATH) + QString('/') + QString(CAMERA_CONFIG_PARAM_NAME);
+    QFile file(cam_cfg_path);
     int ret = file.open(QIODevice::ReadOnly | QIODevice::Text);
     if (!ret)
     {
@@ -1268,7 +1359,31 @@ void MainMenu::ReadCameraConfigParamFile()
     QByteArray sinfo = file.readAll();
     file.close();
 
+	QString  cam_cfg(sinfo);
+	Json::Value jcam_cfg;
+	if (String2Json(cam_cfg.toStdString(), jcam_cfg) == false)
+	{
+		return;
+	}
 
+	int size = jcam_cfg[BODY_CAM_NUM].asInt();
+	if (size != jcam_cfg[BODY_CAM_ATT].size())
+	{
+		return;
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		QString cam_ip = QString(jcam_cfg[BODY_CAM_ATT][i][BODY_CAM_IP].asString().c_str());
+		auto it = connected_camera_map.find(cam_ip);
+		if (it == connected_camera_map.end())
+		{
+			continue;
+		}
+
+		int  cam_id = jcam_cfg[BODY_CAM_ATT][i][BODY_CAM_ID].asInt();
+		it.value().camera_id = cam_id;
+	}
 }
 
 //保存相机配置文件
@@ -1327,7 +1442,7 @@ void MainMenu::SaveCameraConfigParamFile()
 	file.close();
 }
 
-//当前选中的相机IP
+//当前选中的IP相机属性
 void MainMenu::CurrentSelectCameraItem(QListWidgetItem * item)
 {
     cur_selected_camera_ip = item->text();
@@ -1347,7 +1462,10 @@ void MainMenu::CurrentSelectCameraItem(QListWidgetItem * item)
     ui.lineEdit_cameraManagePassword->setText(QString(it.value().camera_item.password));
     ui.lineEdit_cameraRtspAddress->setText(QString(it.value().camera_item.rtsp_url));
     ui.lineEdit_cameraRtspSubAddress->setText(QString(it.value().camera_item.rtsp_url_sub));
-
+	Qt::CheckState status = it.value().camera_item.enable_snaps ? status = Qt::Checked : Qt::Unchecked;
+	ui.checkBox_imageStream->setCheckState(status);
+	status = it.value().camera_item.enable_video ? status = Qt::Checked : Qt::Unchecked;
+	ui.checkBox_videoStream->setCheckState(status);
 }
 
 //添加一个相机
@@ -1382,16 +1500,59 @@ void MainMenu::CheckAddCameraIsExisted(CameraAttribute & cam_param)
 //修改已连接的相机
 void MainMenu::ModifySelectedCamera()
 {
+	int cam_id = 0;
+	if (!ui.lineEdit_cameraManageId->text().isEmpty())
+	{
+		cam_id = ui.lineEdit_cameraManageId->text().toInt();
+	}
+	qDebug() << "cur cam_id:" << cam_id;
+	bool enable_image = ui.checkBox_imageStream->isChecked();
+	bool enable_video = ui.checkBox_videoStream->isChecked();
+		
+	auto it = connected_camera_map.find(cur_selected_camera_ip);
+	if (it == connected_camera_map.end())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("修改相机属性失败！"));
+		return;
+	}
+	
+	it.value().camera_id = cam_id;
+	it.value().camera_item.enable_snaps = enable_image;
+	it.value().camera_item.enable_video = enable_video;
 
+	int ret = VzClient_BoxSetCam(vzbox_handle_, it.value().channel_id, &it.value().camera_item);
+	if (ret != VZSDK_SUCCESS)
+	{
+		return;
+	}
+
+	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("修改%1相机属性成功！").arg(cur_selected_camera_ip));
     //修改相机参数后刷新相机列表
+	SaveCameraConfigParamFile();
     UpdateConnectedCameraInfoMap();
 }
 
 //删除已连接的相机
 void MainMenu::DeleteSelectedCamera()
 {
+	auto it = connected_camera_map.find(cur_selected_camera_ip);
+	if (it == connected_camera_map.end())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("修改相机属性失败！"));
+		return;
+	}
+	//char *cam_ip[32] = { 0 };
+	//sprintf(cam_ip[0], "%s", cur_selected_camera_ip.toStdString().c_str());
+	//int ret = VzClient_BoxRemoveCams(vzbox_handle_, cam_ip, 1);
+	//if (ret != VZSDK_SUCCESS)
+	//{
+	//	return;
+	//}
 
+	//msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("移除%1相机成功！").arg(cur_selected_camera_ip));
+	//connected_camera_map.erase(it);
     //删除相机后刷新相机列表
+	SaveCameraConfigParamFile();
     UpdateConnectedCameraInfoMap();
 }
 

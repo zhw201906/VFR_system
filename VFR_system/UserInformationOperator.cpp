@@ -110,5 +110,5 @@ void UserInformationOperator::ShowMessage(OPERATE_RESULT msg)
 
 void UserInformationOperator::closeEvent(QCloseEvent * event)
 {
-    emit CancelOperUser();
+    //emit CancelOperUser();
 }

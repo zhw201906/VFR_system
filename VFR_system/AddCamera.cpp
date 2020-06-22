@@ -17,7 +17,7 @@ AddCamera::AddCamera(QWidget *parent)
     ui.lineEdit_cameraRtspSubAddress->setPlaceholderText(QString::fromLocal8Bit("rtsp×ÓÂëÁ÷µØÖ·"));
 
     connect(ui.pushButton_cancelCameraManage, &QPushButton::clicked, this, &AddCamera::CancelAdd);
-    connect(ui.pushButton_saveCameraManage, &QPushButton::clicked, this, &AddCamera::ConnectCamera);
+    connect(ui.pushButton_saveCameraManage,   &QPushButton::clicked, this, &AddCamera::ConnectCamera);
 
 }
 
@@ -53,5 +53,5 @@ void AddCamera::ShowMessage(INFORM msg)
 
 void AddCamera::closeEvent(QCloseEvent *event)
 {
-    emit CancelAddCamera();
+    //emit CancelAddCamera();
 }

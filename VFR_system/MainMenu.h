@@ -16,6 +16,9 @@
 #include "UserInformationOperator.h"
 #include "DisplayRecognizeResult.h"
 #include "DisplayDetectResult.h"
+#include "DisplaySnapResult.h"
+#include "DisplaySnapRecognizeResult.h"
+
 
 
 #define  CAMERA_NUM_LIMIT      9
@@ -30,6 +33,12 @@
 #define  NINE_WINDOWS   3
 
 #define  CAMERA_POSITION_SIZE  20
+
+
+#define   BODY_CAM_ID         "cam_id"
+#define   BODY_CAM_IP         "cam_ip"
+#define   BODY_CAM_NUM        "camera_num"
+#define   BODY_CAM_ATT        "camera_attribute"
 
 
 
@@ -52,6 +61,8 @@ public:
 	void DealCloseVzbox();
 	void RefreshDisplayCameraList();
 
+
+	//在线视频
 	void RefreshVideoDisplayWindow();
 	void RefreshVideoDisplayStyle();
 	void AutoPlayAllVideo();
@@ -66,11 +77,13 @@ public:
 
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
+	static void CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult* face_result, void* pUserData);
+	//void (__STDCALL *VZLPRC_FACE_RESULT_CALLBACK)(VzLPRClientHandle handle, TH_FaceResult* face_result, void* pUserData);
 
     void ChangeSystemMode(int index);
     void CleanAllSetSystemModeButton();
 
-
+	//人脸库管理
 	void RefreshUserGroupList();
 	void RefreshUserInfoList();
 	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
@@ -79,6 +92,7 @@ public:
     void DealOperatorUserInfo(UserInfo &user, USER_OPER oper = ADD_USER);
 
 
+	//行人轨迹
 	void LoadBuildingMapImage();
 	void RefreshBuildMapDisplay();
 	void DealPlaceCameraPosition(QPoint pt);
@@ -93,6 +107,7 @@ public:
 	void LoadExistedBuildingMap(const QString &str);
 
 
+	//相机管理
 	void UpdateConnectedCameraInfoMap();
 	void UpdateConnectedCameraIpList();
 	void ReadCameraConfigParamFile();
@@ -104,6 +119,7 @@ public:
     void DeleteSelectedCamera();
 
 
+	//智能测试
     void CreateAItestEngine();
     void LoadCompareImg1();
     void LoadCompareImg2();
@@ -148,6 +164,10 @@ public:
 	DisplayVideoLabel  *video_display_label;	//初始化
 	QVector<QString>   camera_list_buff;        //相机列表，通过IP来记录         
 
+	DisplaySnapResult  *p_snap_result_buff_ui;
+	QListWidgetItem    *p_snap_result_item;
+	DisplaySnapRecognizeResult  *p_recognize_result_buff_ui;
+	QListWidgetItem             *p_recognize_result_item;
 
 	QTimer  video_show_timer_;
 	bool    video_register_finished_;

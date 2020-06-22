@@ -156,6 +156,8 @@
     <ClCompile Include="DisplayDetectResult.cpp" />
     <ClCompile Include="DisplayRecgFaceImage.cpp" />
     <ClCompile Include="DisplayRecognizeResult.cpp" />
+    <ClCompile Include="DisplaySnapRecognizeResult.cpp" />
+    <ClCompile Include="DisplaySnapResult.cpp" />
     <ClCompile Include="DisplayUserInfoItem.cpp" />
     <ClCompile Include="DisplayVideoLabel.cpp" />
     <ClCompile Include="DisplayVideoThread.cpp" />
@@ -174,6 +176,8 @@
     <QtUic Include="AddCamera.ui" />
     <QtUic Include="DisplayDetectResult.ui" />
     <QtUic Include="DisplayRecognizeResult.ui" />
+    <QtUic Include="DisplaySnapRecognizeResult.ui" />
+    <QtUic Include="DisplaySnapResult.ui" />
     <QtUic Include="DisplayUserInfoItem.ui" />
     <QtUic Include="MainMenu.ui" />
     <QtUic Include="UserInformationOperator.ui" />
@@ -190,6 +194,8 @@
     <QtMoc Include="DisplayRecgFaceImage.h" />
     <QtMoc Include="DisplayDetectResult.h" />
     <QtMoc Include="FreeAdjustImageLabel.h" />
+    <QtMoc Include="DisplaySnapResult.h" />
+    <QtMoc Include="DisplaySnapRecognizeResult.h" />
     <ClInclude Include="third_lib\json\json-forwards.h" />
     <ClInclude Include="third_lib\json\json.h" />
     <ClInclude Include="third_lib\vz_SDK\inc\VzBoxClientSDK.h" />
