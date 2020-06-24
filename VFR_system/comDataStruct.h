@@ -19,6 +19,15 @@ typedef struct {
     VZ_BOX_CAM_INFO camera_item;
 }CameraAttribute;
 
+typedef struct {
+	int threshold_value;
+	int id;
+	int enable;
+	int lib_type;
+	char name[32];
+	char remark[64];
+}FaceLibInfo;
+
 typedef  struct {
 	char card_number[32];
 	char db_name[32];

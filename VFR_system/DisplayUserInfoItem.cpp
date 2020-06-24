@@ -61,7 +61,7 @@ DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
 
 	if (!userImage.isNull())
 	{
-		qDebug() << "image is not NULL";
+		//qDebug() << "image is not NULL";
 		QPixmap  show_pix;	
 		Geometric_Scaling_Image(userImage, ui.label_image->width(), ui.label_image->height(), show_pix);
 		ui.label_image->setPixmap(show_pix);
@@ -94,8 +94,8 @@ DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
 
 DisplayUserInfoItem::~DisplayUserInfoItem()
 {
-	qDebug() << "DisplayUserInfoItem Object Nums:" << object_num--;
-	//object_num--;
+	//qDebug() << "DisplayUserInfoItem Object Nums:" << object_num--;
+	object_num--;
 }
 
 void DisplayUserInfoItem::SetDisplayItemInfo(QString userName, QImage & userImage)

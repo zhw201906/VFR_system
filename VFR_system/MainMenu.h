@@ -24,7 +24,8 @@
 #define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
 
-#define  PAGE_USERINFO_NUM     25
+#define  PAGE_USER_NUM_BACE    25
+#define  PAGE_USERINFO_NUM     50
 #define  USERINFO_ITEM_SIZE    QSize(145, 200)
 
 #define  VIDEO_FRAME_RATE      25
@@ -90,8 +91,12 @@ public:
 
 	//人脸库管理
 	void RefreshUserGroupList();
+	void RefreshFaceLibInfoMap();
 	void RefreshUserInfoList();
 	void DisplaynPageUserInfoList(int group_id = 1, int page_num = 1);
+	void CurrentSelectFaceLib(QListWidgetItem *item);
+
+
     void AddOneUserInformation();
     void ModifyOneUserInformation();
     void DealOperatorUserInfo(UserInfo &user, USER_OPER oper = ADD_USER);
@@ -187,10 +192,13 @@ public:
 
 	//DisplayUserInfoItem *p_user_info_item;
 	//QListWidgetItem     *p_user_list_item;
+	QMap<QString, FaceLibInfo>  face_lib_info_map;    //记录人脸库信息  库名称--->库信息
 	int                   group_cur_id_;
+	int                   group_cur_total_face_num_;
 	int                   user_list_cur_page_num_;
 	int                   user_list_cur_page_total_;
-	VZ_FACE_USER_RESULT   cur_group_toal_user_info_;
+
+	//VZ_FACE_USER_RESULT   cur_group_toal_user_info_;
     UserInformationOperator   *p_operator_user_ui;
 
 
