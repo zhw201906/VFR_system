@@ -25,7 +25,7 @@
 #define  FRAME_NUM_SIZE_LIMIT  3
 
 #define  PAGE_USERINFO_NUM     25
-#define  USERINFO_ITEM_SIZE    QSize(195, 245)
+#define  USERINFO_ITEM_SIZE    QSize(145, 200)
 
 #define  VIDEO_FRAME_RATE      25
 #define  ONE_WINDOWS    1
@@ -59,6 +59,7 @@ public:
     void SetIconInit();
 	void DealOpenVzbox();
 	void DealCloseVzbox();
+	void SystemAllInit();
 	void RefreshDisplayCameraList();
 
 
@@ -78,10 +79,14 @@ public:
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 	static void CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult* face_result, void* pUserData);
-	//void (__STDCALL *VZLPRC_FACE_RESULT_CALLBACK)(VzLPRClientHandle handle, TH_FaceResult* face_result, void* pUserData);
-
+	static void CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx* face_result, void* pUserData);
+	
     void ChangeSystemMode(int index);
     void CleanAllSetSystemModeButton();
+	void DisplaySnapInformation(FaceSnapInfo *face_info, QString *image_path);
+	void CleanSnapAndRecgResultList();
+
+
 
 	//人脸库管理
 	void RefreshUserGroupList();
@@ -90,7 +95,7 @@ public:
     void AddOneUserInformation();
     void ModifyOneUserInformation();
     void DealOperatorUserInfo(UserInfo &user, USER_OPER oper = ADD_USER);
-
+	void CleanAllUserInfoItem();
 
 	//行人轨迹
 	void LoadBuildingMapImage();
@@ -104,6 +109,8 @@ public:
 	void DeleteExistedBuildingMap();
 	void UpdateExistedBuildingMapList();
 	void UpdateSavedPersonTrackList();
+	void UpdateConnectedCameraList();
+	void ShowCurrentSelectCameraId(const QString &cam_ip);
 	void LoadExistedBuildingMap(const QString &str);
 
 
@@ -136,6 +143,11 @@ protected:
 	void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
 	bool eventFilter(QObject *watched, QEvent *event);
+
+
+signals:
+	void ShowSnapItem(FaceSnapInfo *face_info, QString *image_path);
+
 
 public slots:
 	void DealSingleClickedVideoLabel(int chn);
@@ -173,12 +185,12 @@ public:
 	bool    video_register_finished_;
 	int     video_index_;
 
-	DisplayUserInfoItem *p_user_info_item;
-	QListWidgetItem     *p_user_list_item;
-	int                  group_cur_id_;
-	int                  user_list_cur_page_num_;
-	int                  user_list_cur_page_total_;
-	VZ_FACE_USER_RESULT  cur_group_toal_user_info_;
+	//DisplayUserInfoItem *p_user_info_item;
+	//QListWidgetItem     *p_user_list_item;
+	int                   group_cur_id_;
+	int                   user_list_cur_page_num_;
+	int                   user_list_cur_page_total_;
+	VZ_FACE_USER_RESULT   cur_group_toal_user_info_;
     UserInformationOperator   *p_operator_user_ui;
 
 

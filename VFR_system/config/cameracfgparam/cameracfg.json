@@ -1,7 +1,7 @@
 {
   "camera_num":9,
   "camera_attribute":[{
-    "cam_id":0,
+    "cam_id":76,
     "chn_id":17,
     "http_port":80,
     "cam_ip":"192.168.109.122",
@@ -78,7 +78,7 @@
     "rtsp_url":"rtsp://192.168.112.196:8557/h264",
     "rtsp_url_sub":"rtsp://192.168.112.196:8557/sub_stream_1"},
   {
-    "cam_id":0,
+    "cam_id":13,
     "chn_id":1,
     "http_port":80,
     "cam_ip":"192.168.116.106",

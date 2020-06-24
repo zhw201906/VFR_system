@@ -36,6 +36,7 @@ UserInformationOperator::UserInformationOperator(USER_OPER oper, QWidget *parent
     connect(ui.pushButton_saveUser, &QPushButton::clicked, this, &UserInformationOperator::EnsureOperUser);
 
     //修改用户信息时，需要先加载用户信息
+
 }
 
 UserInformationOperator::UserInformationOperator(UserInfo & user, USER_OPER oper)
@@ -53,6 +54,31 @@ UserInformationOperator::UserInformationOperator(UserInfo & user, USER_OPER oper
     connect(ui.pushButton_cancelUser, &QPushButton::clicked, this, &UserInformationOperator::QuitOperUser);
     connect(ui.pushButton_saveUser, &QPushButton::clicked, this, &UserInformationOperator::EnsureOperUser);
 
+	user_image_path = QString(user.img_url);
+	QPixmap pix;
+	Geometric_Scaling_Image(user_image_path, ui.label_userImage->width(), ui.label_userImage->height(), pix);
+	ui.label_userImage->setPixmap(pix);
+
+	ui.lineEdit_userName->setText(QString::fromLocal8Bit(user.user_name));
+	//ui.dateEdit_userBirthday->setText(QString::fromLocal8Bit(user.birthday));
+	ui.lineEdit_userCardId->setText(QString::fromLocal8Bit(user.card_number));
+	ui.lineEdit_userPhone->setText(QString::fromLocal8Bit(user.phone));
+	ui.lineEdit_userProvices->setText(QString::fromLocal8Bit(user.province));
+	ui.lineEdit_userCity->setText(QString::fromLocal8Bit(user.city));
+	ui.lineEdit_userAddress->setText(QString::fromLocal8Bit(user.address));
+
+	if (user.sex == 0)
+	{
+		ui.comboBox_userSex->setCurrentText(QString::fromLocal8Bit("男"));
+	} 
+	else if(user.sex == 1)
+	{
+		ui.comboBox_userSex->setCurrentText(QString::fromLocal8Bit("女"));
+	}
+	else if (user.sex == 2)
+	{
+		ui.comboBox_userSex->setCurrentText(QString::fromLocal8Bit("未知"));
+	}
 }
 
 UserInformationOperator::~UserInformationOperator()
@@ -78,6 +104,42 @@ void UserInformationOperator::LoadUserImage()
 void UserInformationOperator::EnsureOperUser()
 {
     UserInfo user_info;
+	QString name = ui.lineEdit_userName->text();
+	if (name.isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("姓名不允许为空！"));
+		return;
+	}
+
+	if (user_image_path.isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片不允许为空！"));
+		return;
+	}
+
+	strcpy(user_info.user_name, name.toUtf8());
+	strcpy(user_info.img_url, user_image_path.toUtf8());
+	//strcpy(user_info.birthday, ui.dateEdit_userBirthday->text().toUtf8());
+	strcpy(user_info.card_number, ui.lineEdit_userCardId->text().toUtf8());
+	strcpy(user_info.province, ui.lineEdit_userProvices->text().toUtf8());
+	strcpy(user_info.city, ui.lineEdit_userCity->text().toUtf8());
+	strcpy(user_info.address, ui.lineEdit_userAddress->text().toUtf8());
+	strcpy(user_info.phone, ui.lineEdit_userPhone->text().toUtf8());
+	
+	if (ui.comboBox_userSex->currentText().compare(QString::fromLocal8Bit("男")) == 0)
+	{
+		user_info.sex = 0;
+	}	
+	else if (ui.comboBox_userSex->currentText().compare(QString::fromLocal8Bit("女")) == 0)
+	{
+		user_info.sex = 1;
+
+	}
+	else if (ui.comboBox_userSex->currentText().compare(QString::fromLocal8Bit("未知")) == 0)
+	{
+		user_info.sex = 2;
+
+	}
 
     emit OperUserInfo(user_info, oper_mode);
 }

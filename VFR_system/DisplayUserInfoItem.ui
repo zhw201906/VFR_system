@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>198</width>
-    <height>246</height>
+    <width>141</width>
+    <height>186</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -26,18 +26,27 @@
    <string>DisplayUserInfoItem</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QLabel" name="label_image">
      <property name="minimumSize">
       <size>
-       <width>180</width>
-       <height>200</height>
+       <width>123</width>
+       <height>164</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>180</width>
-       <height>200</height>
+       <width>123</width>
+       <height>164</height>
       </size>
      </property>
      <property name="frameShape">
@@ -67,7 +76,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="10,0,0">
       <property name="spacing">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="leftMargin">
        <number>0</number>
@@ -83,6 +92,18 @@
       </property>
       <item>
        <widget class="QCheckBox" name="checkBox_userName">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>80</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <family>宋体</family>

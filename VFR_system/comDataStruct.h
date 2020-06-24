@@ -19,7 +19,22 @@ typedef struct {
     VZ_BOX_CAM_INFO camera_item;
 }CameraAttribute;
 
-typedef  VZ_FACE_USER_ITEM  UserInfo;
+typedef  struct {
+	char card_number[32];
+	char db_name[32];
+	int  face_id;
+	int  pic_index;
+	char group_id[32];
+	char phone[16];
+	char province[32];
+	char city[16];
+	int  sex;
+	int  user_type;
+	char birthday[16];
+	char address[64];
+	char user_name[64];
+	char img_url[128];
+}UserInfo;
 
 typedef struct {
 	unsigned char sex;							// 0:男，1:女，2:未知
@@ -33,8 +48,21 @@ typedef struct {
 	char datetime[20];							// 时间，格式：yyyy-MM-dd HH:mm:ss
 }FaceSnapInfo;
 
-
 typedef struct {
-
+	unsigned char channel_id;					// 所属视频通道号
+	char          datetime[20];					// 时间，格式：yyyy-MM-dd HH:mm:ss
+	unsigned int  msec;							// 时间戳，毫秒
+	unsigned char num;							// 人脸个数
+	unsigned char snap_num;					    // 全图个数
+	int recg_face_id;			        // 识别结果所在人脸库中的id
+	unsigned short recg_face_lib_id;    // 人脸库id
+	unsigned char  recg_face_score;     // 识别结果分数[0-100]
+	char recg_people_name[16];	        // 识别出的人名
+	char recg_img_url[64];				// 图片路径
+	char recg_birthday[12];				// 生日
+	char recg_prov[18];					// 所在省份
 }FaceRecognizeInfo;
+
+
+
 #endif

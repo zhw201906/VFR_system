@@ -48,7 +48,6 @@ void DisplaySnapResult::SetShowData(FaceSnapInfo & face_info, QString &path)
 		ui.label_image->setPixmap(pix);
 	}
 
-	qDebug() << "time:" << face_info.datetime;
 	QString time = QString(face_info.datetime).mid(11);
 	ui.label_age->setText(QString::fromLocal8Bit(age[face_info.age]));
 	ui.label_sex->setText(QString::fromLocal8Bit(sex[face_info.sex]));

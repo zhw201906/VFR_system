@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>733</width>
-    <height>785</height>
+    <width>536</width>
+    <height>580</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>450</width>
+    <height>580</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>538</width>
+    <height>770</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>用户信息</string>
@@ -47,19 +59,6 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="1">
-       <spacer name="verticalSpacer_7">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>15</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_13">
         <property name="text">
@@ -136,6 +135,13 @@
         </property>
        </widget>
       </item>
+      <item row="5" column="1">
+       <widget class="QDateEdit" name="dateEdit_userBirthday">
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item row="6" column="1">
        <spacer name="verticalSpacer_15">
         <property name="orientation">
@@ -172,8 +178,28 @@
         </property>
        </spacer>
       </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>联系方式：</string>
+        </property>
+       </widget>
+      </item>
       <item row="9" column="1">
        <widget class="QLineEdit" name="lineEdit_userPhone"/>
+      </item>
+      <item row="10" column="1">
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item row="11" column="0">
        <widget class="QLabel" name="label_16">
@@ -370,33 +396,6 @@
         </property>
        </spacer>
       </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>联系方式：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1">
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="5" column="1">
-       <widget class="QDateEdit" name="dateEdit_userBirthday">
-        <property name="calendarPopup">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
@@ -412,7 +411,26 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="2">
+      <item row="2" column="1">
+       <widget class="QPushButton" name="pushButton_loadUserImage">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>160</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>上传照片</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -426,19 +444,6 @@
        </spacer>
       </item>
       <item row="1" column="0">
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>67</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="0">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -451,7 +456,20 @@
         </property>
        </spacer>
       </item>
-      <item row="1" column="2">
+      <item row="0" column="1">
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="2">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -464,7 +482,20 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="1">
+      <item row="2" column="0">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>67</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="1">
        <widget class="QLabel" name="label_userImage">
         <property name="minimumSize">
          <size>
@@ -489,24 +520,18 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="pushButton_loadUserImage">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+      <item row="3" column="1">
+       <spacer name="verticalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-        <property name="minimumSize">
+        <property name="sizeHint" stdset="0">
          <size>
-          <width>160</width>
-          <height>0</height>
+          <width>20</width>
+          <height>40</height>
          </size>
         </property>
-        <property name="text">
-         <string>上传照片</string>
-        </property>
-       </widget>
+       </spacer>
       </item>
      </layout>
     </widget>

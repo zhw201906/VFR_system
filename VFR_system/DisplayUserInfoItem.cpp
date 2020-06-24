@@ -18,11 +18,13 @@ static void Geometric_Scaling_Image(const QImage &src, const int control_width, 
 		dst_pix = pix_src.scaled(pix_src.width() / ratio_h, pix_src.height() / ratio_h);
 }
 
+int DisplayUserInfoItem::object_num = 0;
+
 DisplayUserInfoItem::DisplayUserInfoItem(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
-
+	
 	ui.toolButton_edit->setIcon(QIcon("./icon/edit.jpg"));
 	ui.toolButton_del->setIcon(QIcon("./icon/del.jpg"));
 
@@ -51,6 +53,7 @@ DisplayUserInfoItem::DisplayUserInfoItem(QWidget *parent)
 
 DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
 {
+	object_num++;
 	ui.setupUi(this);
 
 	ui.toolButton_edit->setIcon(QIcon("./icon/edit.jpg"));
@@ -91,13 +94,14 @@ DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
 
 DisplayUserInfoItem::~DisplayUserInfoItem()
 {
+	qDebug() << "DisplayUserInfoItem Object Nums:" << object_num--;
+	//object_num--;
 }
 
 void DisplayUserInfoItem::SetDisplayItemInfo(QString userName, QImage & userImage)
 {
 	if (!userImage.isNull())
 	{
-		qDebug() << "image is not NULL";
 		QPixmap  show_pix;
 		Geometric_Scaling_Image(userImage, ui.label_image->width(), ui.label_image->height(), show_pix);
 		ui.label_image->clear();

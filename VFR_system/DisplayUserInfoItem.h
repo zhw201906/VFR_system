@@ -16,6 +16,7 @@ public:
 	~DisplayUserInfoItem();
 
 	void  SetDisplayItemInfo(QString userName, QImage &userImage);
+	int   GetObjectNum() { return object_num; };
 
 signals:
 	void  EditUserInfoSignal();
@@ -26,4 +27,6 @@ signals:
 
 private:
 	Ui::DisplayUserInfoItem ui;
+	static int object_num;
 };
+

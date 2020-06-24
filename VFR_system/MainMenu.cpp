@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QPixmap>
 #include <QPainter>
+#include <QMetaType>
 
 QMutex video_cache_mutex;
 unsigned char  *video_data[CAMERA_NUM_LIMIT];               //存储原数图像数据指针
@@ -83,6 +84,7 @@ MainMenu::MainMenu(QWidget *parent)
 
 /**************************************************系统主界面全局初始化********************************************************/
 	{
+		qRegisterMetaType<FaceSnapInfo>("FaceSnapInfo");
 		//初始化显示图标
 		SetIconInit();
 		ChangeSystemMode(0);
@@ -94,6 +96,7 @@ MainMenu::MainMenu(QWidget *parent)
 		connect(ui.pushButton_onlineMonitoring, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(0);
 			RefreshVideoDisplayWindow();
+			//CleanSnapAndRecgResultList();
 
             CleanAllSetSystemModeButton();
             ui.pushButton_onlineMonitoring->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
@@ -110,8 +113,6 @@ MainMenu::MainMenu(QWidget *parent)
 
 		connect(ui.pushButton_libraryManage, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(2);
-			RefreshUserGroupList();
-			RefreshUserInfoList();
 
             CleanAllSetSystemModeButton();
             ui.pushButton_libraryManage->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
@@ -128,6 +129,7 @@ MainMenu::MainMenu(QWidget *parent)
 
 		connect(ui.pushButton_trackPath, &QPushButton::clicked, [=]() {
 			ChangeSystemMode(4);
+			RefreshBuildMapDisplay();
 
             CleanAllSetSystemModeButton();
             ui.pushButton_trackPath->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
@@ -160,10 +162,12 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.listWidget_nowSnap->setViewMode(QListView::IconMode);
 		ui.listWidget_nowSnap->setResizeMode(QListWidget::Adjust);
 		ui.listWidget_nowSnap->setMovement(QListWidget::Static);
+		ui.listWidget_nowSnap->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
 		ui.listWidget_nowRecognize->setViewMode(QListView::IconMode);
 		ui.listWidget_nowRecognize->setResizeMode(QListWidget::Adjust);
 		ui.listWidget_nowRecognize->setMovement(QListWidget::Static);
+		ui.listWidget_nowRecognize->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
 		//初始化显示视频窗口label
 		video_display_label = new DisplayVideoLabel[CAMERA_NUM_LIMIT];
@@ -224,6 +228,8 @@ MainMenu::MainMenu(QWidget *parent)
 
 		//播放视频（定时器）
 		connect(&video_show_timer_, &QTimer::timeout, this, &MainMenu::DealPlayVideoTimer);
+
+		connect(this, &MainMenu::ShowSnapItem, this, &MainMenu::DisplaySnapInformation);
 	}
     
 /**************************************************相机配置界面********************************************************/
@@ -243,12 +249,13 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.listWidget_userInfoList->setViewMode(QListView::IconMode);
 		ui.listWidget_userInfoList->setResizeMode(QListWidget::Adjust);
 		ui.listWidget_userInfoList->setMovement(QListWidget::Static);
+		ui.listWidget_userInfoList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
         p_operator_user_ui = NULL;
-		p_user_info_item = NULL;
-		p_user_list_item = NULL;
-		p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
-		p_user_list_item = new QListWidgetItem[PAGE_USERINFO_NUM];
+		//p_user_info_item = NULL;
+		//p_user_list_item = NULL;
+		//p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
+		//p_user_list_item = new QListWidgetItem[PAGE_USERINFO_NUM];
 
 		group_cur_id_ = 1;
 		user_list_cur_page_num_ = 1;
@@ -295,6 +302,7 @@ MainMenu::MainMenu(QWidget *parent)
 		connect(ui.pushButton_deleteExistBuildingMap, &QPushButton::clicked, this, &MainMenu::DeleteExistedBuildingMap);
 		connect(ui.comboBox_existedBuindingMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged), this, &MainMenu::LoadExistedBuildingMap);
 		connect(ui.pushButton_resetCameraPlace, &QPushButton::clicked, this, &MainMenu::ResetCreateNewBuildingMap);
+		connect(ui.comboBox_selectCamera, &QComboBox::currentTextChanged, this, &MainMenu::ShowCurrentSelectCameraId);
 
 		UpdateExistedBuildingMapList();
 	}
@@ -381,7 +389,7 @@ void MainMenu::SetIconInit()
     ui.toolButton_refreshLibrary->setIcon(QIcon("./icon/refresh.jpg"));
 }
 
-//打开设备
+//打开设备，成功打开设备后，对每个系统功能做初始化
 void MainMenu::DealOpenVzbox()
 {
 	if (vzbox_online_status)
@@ -440,15 +448,7 @@ void MainMenu::DealOpenVzbox()
 	ui.lineEdit_password->setEnabled(false);
 	ui.lineEdit_userName->setEnabled(false);
 
-	UpdateConnectedCameraInfoMap();
-	RefreshDisplayCameraList();
-	RefreshVideoDisplayWindow();
-	int ret = VzLPRClient_SetFaceResultCallBack(vzbox_handle_, &MainMenu::CameraSnapCallBack, (void *)this);
-	if (ret != VZSDK_SUCCESS)
-	{
-		qDebug() << "set snap callback falied...";
-		return;
-	}
+	SystemAllInit();
 }
 
 //关闭设备
@@ -470,10 +470,41 @@ void MainMenu::DealCloseVzbox()
 
 	video_show_timer_.stop();
 	ui.listWidget_CameraList->clear();	
+	ui.listWidget_cameraManageList->clear();
     connected_camera_map.clear();
 	camera_list_buff.clear();
 	CloseAllVideoDisplay();
 	ClearVideoFrameCache();
+}
+
+//系统全部功能初始化，在成功连接设备后执行
+void MainMenu::SystemAllInit()
+{
+	if (!vzbox_online_status)
+	{
+		return;
+	}
+
+	UpdateConnectedCameraInfoMap();
+	RefreshVideoDisplayWindow();
+	RefreshUserGroupList();
+	RefreshUserInfoList();
+
+	//设置抓拍回调显示
+	int ret = VzLPRClient_SetFaceResultCallBack(vzbox_handle_, &MainMenu::CameraSnapCallBack, (void *)this);
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << "set snap callback falied...";
+		//return;
+	}
+
+	//设置抓拍识别回调显示
+	ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << "set recognize callback falied...";
+		//return;
+	}
 }
 
 //刷新显示的相机列表（同时刷新在线监控和相机管理界面）
@@ -742,12 +773,11 @@ void MainMenu::CameraFrameCallBack(VzLPRClientHandle handle, void * pUserData, c
 void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face_result, void * pUserData)
 {
 	static int chn_i = 0;
-	qDebug() << "snap success:" << chn_i << "  person_num:" << face_result->person_num;
 	MainMenu *p_menu = (MainMenu*)pUserData;
-	
-	//for (int i = 0; i < face_result->person_num; i++)
+
+	int i = 0;
+	//for (; i < face_result->person_num; i++)
 	{
-		int i = 0;
 		FaceSnapInfo face_info;
 		face_info.sex = face_result->sex;
 		face_info.age = face_result->age;
@@ -767,6 +797,28 @@ void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face
 				   face_result->face_imgs[i].img_len, face_data);
 			fclose(face_data);
 		}
+
+		//emit p_menu->ShowSnapItem(&face_info, &face_path);
+		//p_menu->DisplaySnapInformation(face_info, face_path);
+		//DisplaySnapResult  *p_snap_result = new DisplaySnapResult;
+		//p_snap_result->SetShowData(face_info, face_path);
+
+		//QListWidgetItem *item = new QListWidgetItem;
+		//item->setSizeHint(SNAP_ITEM_SIZE);
+		//p_menu->ui.listWidget_nowSnap->addItem(item);
+		//p_menu->ui.listWidget_nowSnap->setItemWidget(item, p_snap_result);
+		//p_menu->ui.listWidget_nowSnap->scrollToBottom();
+
+
+		//p_menu->p_snap_result_buff_ui = new DisplaySnapResult;
+		//p_menu->p_snap_result_item = new QListWidgetItem(p_menu->ui.listWidget_nowSnap);
+		//p_menu->p_snap_result_buff_ui->SetShowData(face_info, face_path);
+		//p_menu->p_snap_result_item->setSizeHint(SNAP_ITEM_SIZE);
+		//p_menu->ui.listWidget_nowSnap->addItem(p_menu->p_snap_result_item);
+		//p_menu->ui.listWidget_nowSnap->setItemWidget(p_menu->p_snap_result_item, 
+		//	                                         p_menu->p_snap_result_buff_ui);
+
+
 		p_menu->p_snap_result_buff_ui[chn_i].SetShowData(face_info, face_path);
 		p_menu->p_snap_result_item[chn_i].setSizeHint(SNAP_ITEM_SIZE);
 		p_menu->ui.listWidget_nowSnap->addItem(&p_menu->p_snap_result_item[chn_i]);
@@ -774,20 +826,95 @@ void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face
 			                                         &p_menu->p_snap_result_buff_ui[chn_i]);
 		p_menu->ui.listWidget_nowSnap->scrollToBottom();
 
-
-		//p_menu->p_recognize_result_buff_ui[chn_i].SetShowRecognizeResult(face_info, face_path);
-		p_menu->p_recognize_result_item[chn_i].setSizeHint(SNAP_RECG_ITEM_SIZE);
-		p_menu->ui.listWidget_nowRecognize->addItem(&p_menu->p_recognize_result_item[chn_i]);
-		p_menu->ui.listWidget_nowRecognize->setItemWidget(&p_menu->p_recognize_result_item[chn_i],
-			&p_menu->p_recognize_result_buff_ui[chn_i]);
-		p_menu->ui.listWidget_nowRecognize->scrollToBottom();
-
-
+		//p_menu->p_snap_result_buff_ui[chn_i].SetShowData(face_info, face_path);
+		//QListWidgetItem *snap_item = new QListWidgetItem;
+		//snap_item->setSizeHint(SNAP_ITEM_SIZE);
+		//p_menu->ui.listWidget_nowSnap->addItem(snap_item);
+		//p_menu->ui.listWidget_nowSnap->setItemWidget(snap_item,
+		//	&p_menu->p_snap_result_buff_ui[chn_i]);
+		//p_menu->ui.listWidget_nowSnap->scrollToBottom();
 
 		chn_i++;
 		if (chn_i >= CAMERA_SNAP_RESULT_MAX_NUMS)
 		{
 			chn_i = 0;
+			//p_menu->CleanSnapAndRecgResultList();
+			//p_menu->ui.listWidget_nowSnap->clear();
+		}
+	}
+}
+
+//抓拍识别结果回调函数
+void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx * face_result, void * pUserData)
+{
+	static int recg_i = 0;
+	qDebug() << "recognize success:" << recg_i << "  person_num:" << face_result->snap_num;
+	MainMenu *p_menu = (MainMenu*)pUserData;
+	int i = 0;
+	//for (; i < face_result->num; i++)
+	{		
+		FaceRecognizeInfo face_info;
+
+		face_info.channel_id = face_result->face_items[i].channel_id;
+		face_info.num = face_result->num;
+		face_info.msec = face_result->msec;
+		face_info.recg_face_score = face_result->face_items[i].recg_face_score;
+		face_info.recg_face_id = face_result->face_items[i].face_id;
+		face_info.recg_face_lib_id = face_result->face_items[i].recg_face_lib_id;
+		strcpy(face_info.recg_people_name, face_result->face_items[i].recg_people_name);
+		strcpy(face_info.recg_img_url, face_result->face_items[i].recg_img_url);
+		strcpy(face_info.recg_birthday, face_result->face_items[i].recg_birthday);
+		strcpy(face_info.recg_prov, face_result->face_items[i].recg_prov);
+		strcpy(face_info.datetime, face_result->datetime);
+
+		//加载库图片
+		QString face_recg_path = QString(CAMERA_RECG_IMAGE_PATH);
+		face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+		FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
+		if (face_data)
+		{
+			int face_size = 1024 * 1024;
+			char*p_face = (char *)malloc(face_size);
+			memset(p_face, 0, face_size);
+
+			int ret = VzClient_LoadFaceImageByPath(p_menu->vzbox_handle_, face_info.recg_img_url, p_face, &face_size);
+			if (ret != VZSDK_SUCCESS)
+			{
+				fclose(face_data);
+				free(p_face);
+				//continue;
+			}
+			else
+			{
+				fwrite(p_face, sizeof(char), face_size, face_data);
+				fclose(face_data);
+				free(p_face);
+			}
+		}
+
+		//加载抓拍图
+		QImage img;
+		QString face_snap_path(CAMERA_SNAP_IMAGE_PATH);
+		face_snap_path.append(QString("/snap%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+		FILE *snap_data = fopen(face_snap_path.toStdString().c_str(), "wb+");
+		if (snap_data)
+		{
+			fwrite(face_result->face_imgs[i].img_buf, sizeof(unsigned char),
+				face_result->face_imgs[i].img_len, snap_data);
+			fclose(snap_data);
+		}		
+
+		p_menu->p_recognize_result_buff_ui[recg_i].SetShowRecognizeResult(face_info, face_snap_path, face_recg_path);
+		p_menu->p_recognize_result_item[recg_i].setSizeHint(SNAP_RECG_ITEM_SIZE);
+		p_menu->ui.listWidget_nowRecognize->addItem(&p_menu->p_recognize_result_item[recg_i]);
+		p_menu->ui.listWidget_nowRecognize->setItemWidget(&p_menu->p_recognize_result_item[recg_i],
+			&p_menu->p_recognize_result_buff_ui[recg_i]);
+		p_menu->ui.listWidget_nowRecognize->scrollToBottom();
+
+		recg_i++;
+		if (recg_i >= CAMERA_SNAP_RECOGNIZE_MAX_NUMS)
+		{
+			recg_i = 0;
 			//p_menu->ui.listWidget_nowSnap->clear();
 		}
 	}
@@ -817,7 +944,39 @@ void MainMenu::CleanAllSetSystemModeButton()
     ui.pushButton_smartTest->setEnabled(true);
 }
 
-//刷新人脸库列表
+//显示抓拍信息
+void MainMenu::DisplaySnapInformation(FaceSnapInfo *face_info, QString *image_path)
+{
+	qDebug() << "callback emit signal...";
+	DisplaySnapResult  *p_snap_result = new DisplaySnapResult;
+	p_snap_result->SetShowData(*face_info, *image_path);
+
+	QListWidgetItem *item = new QListWidgetItem;
+	item->setSizeHint(SNAP_ITEM_SIZE);
+	ui.listWidget_nowSnap->addItem(item);
+	//ui.listWidget_nowSnap->setItemWidget(item, p_snap_result);
+	//ui.listWidget_nowSnap->scrollToBottom();
+}
+
+//清空抓拍和抓拍识别列表框
+void MainMenu::CleanSnapAndRecgResultList()
+{
+	for (int i = ui.listWidget_nowSnap->count() - 1; i >= 0; i--)
+	{
+		QListWidgetItem *item = ui.listWidget_nowSnap->item(i);
+		ui.listWidget_nowSnap->removeItemWidget(item);
+		delete item;
+	}
+
+	for (int i = ui.listWidget_nowRecognize->count() - 1; i >= 0; i--)
+	{
+		QListWidgetItem *item = ui.listWidget_nowRecognize->item(i);
+		ui.listWidget_nowRecognize->removeItemWidget(item);
+		delete item;
+	}
+}
+
+//刷新人脸库列表,同时刷新显示用户人脸信息
 void MainMenu::RefreshUserGroupList()
 {
 	if (!vzbox_online_status)
@@ -835,11 +994,13 @@ void MainMenu::RefreshUserGroupList()
 	}
 }
 
-//刷新用户信息列表
+//刷新显示用户信息列表
 void MainMenu::RefreshUserInfoList()
 {
 	if (!vzbox_online_status)
+	{
 		return;
+	}
 
 	//ui.listWidget_userInfoList->clear();
 	DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
@@ -889,8 +1050,11 @@ void MainMenu::RefreshUserInfoList()
 	}*/
 }
 
+//按页显示用户信息
 void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 {
+	CleanAllUserInfoItem();
+
 	VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
 	condition.page_num = page_num;
 	condition.page_count = PAGE_USERINFO_NUM;
@@ -904,7 +1068,12 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	}
 
 	qDebug() << "All user:" << cur_group_toal_user_info_.total_count;
-	//ui.listWidget_userInfoList->clear();
+	qDebug() << "Cur face:" << cur_group_toal_user_info_.face_count;
+
+	static int cur_lib_total_num = 0;
+	cur_group_toal_user_info_.total_count = cur_group_toal_user_info_.total_count >= cur_lib_total_num ? cur_group_toal_user_info_.total_count : cur_lib_total_num;
+	cur_lib_total_num = cur_group_toal_user_info_.total_count;
+	
 	for (int i = 0; i < cur_group_toal_user_info_.face_count; i++)
 	{
 		QImage img;
@@ -930,14 +1099,23 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 				img.load(face_path);
 			}		
 		}
-		p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
-		p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
+		QListWidgetItem *p_user_list_item = new QListWidgetItem(ui.listWidget_userInfoList);
+		DisplayUserInfoItem *p_user_info_item = new DisplayUserInfoItem(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
 
-		ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
-		ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
+		//p_user_info_item->SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
+		p_user_list_item->setSizeHint(USERINFO_ITEM_SIZE);
+		ui.listWidget_userInfoList->addItem(p_user_list_item);
+		ui.listWidget_userInfoList->setItemWidget(p_user_list_item, p_user_info_item);
+
+		//p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
+		//p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
+
+		//ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
+		//ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
 	}
 
-	if (cur_group_toal_user_info_.total_count % PAGE_USERINFO_NUM)
+	//计算当前库中有多少页用户
+	if (cur_group_toal_user_info_.total_count % PAGE_USERINFO_NUM != 0)
 	{
 		user_list_cur_page_total_ = cur_group_toal_user_info_.total_count / PAGE_USERINFO_NUM + 1;
 	}
@@ -962,7 +1140,6 @@ void MainMenu::AddOneUserInformation()
 
     connect(p_operator_user_ui, &UserInformationOperator::OperUserInfo, this, &MainMenu::DealOperatorUserInfo);
     connect(p_operator_user_ui, &UserInformationOperator::CancelOperUser, [=]() {
-        qDebug() << "quit add user";
         delete p_operator_user_ui;
         p_operator_user_ui = NULL;
     });
@@ -981,7 +1158,6 @@ void MainMenu::ModifyOneUserInformation()
 
     connect(p_operator_user_ui, &UserInformationOperator::OperUserInfo, this, &MainMenu::DealOperatorUserInfo);
     connect(p_operator_user_ui, &UserInformationOperator::CancelOperUser, [=]() {
-        qDebug() << "quit modify user";
         delete p_operator_user_ui;
         p_operator_user_ui = NULL;
     });
@@ -993,9 +1169,32 @@ void MainMenu::ModifyOneUserInformation()
 void MainMenu::DealOperatorUserInfo(UserInfo & user, USER_OPER oper)
 {
     //调用user相关SDK
+	int ret = ~0;
+	qDebug() << "ret:" << ret;
+	VZ_FACE_USER_RESULT user_info = { 0 };
+	user_info.face_count = 1;
+	user_info.total_count = 1;
+	user_info.face_items->sex = user.sex;
+	strcpy(user_info.face_items[0].user_name, user.user_name);
+	strcpy(user_info.face_items[0].birthday, user.birthday);
+	strcpy(user_info.face_items[0].phone, user.phone);
+	strcpy(user_info.face_items[0].province, user.province);
+	strcpy(user_info.face_items[0].city, user.city);
+	strcpy(user_info.face_items[0].address, user.address);
+	QImage image;
+	image.load(QString(user.img_url));
+	user_info.face_items[0].pic_data = (char *)image.bits();
+
+	if (oper == ADD_USER)
+	{
+		ret = VzClient_FaceRecgUserAdd(vzbox_handle_, &user_info);
+	}
+	else if (oper == MODIFY_USER)
+	{
+		ret = VzClient_FaceRecgUserEdit(vzbox_handle_, &user_info);
+	}
 
     //校验检测结果
-    int ret = VZSDK_FAILED;
     if (ret != VZSDK_SUCCESS)
     {
         if (oper == ADD_USER)   p_operator_user_ui->ShowMessage(ADD_USER_FAILED);
@@ -1010,6 +1209,17 @@ void MainMenu::DealOperatorUserInfo(UserInfo & user, USER_OPER oper)
     p_operator_user_ui->close();
     delete p_operator_user_ui;
     p_operator_user_ui = NULL;
+}
+
+//清空用户信息中的全部框
+void MainMenu::CleanAllUserInfoItem()
+{
+	for (int i = ui.listWidget_userInfoList->count()-1; i >=0; i--)
+	{
+		QListWidgetItem *item = ui.listWidget_userInfoList->item(i);
+		ui.listWidget_userInfoList->removeItemWidget(item);
+		delete item;
+	}
 }
 
 //载入建筑平面图照片
@@ -1063,11 +1273,11 @@ void MainMenu::DealPlaceCameraPosition(QPoint pt)
 		return;
 	}
 
-	//if (ui.comboBox_selectCamera->currentText().isEmpty())
-	//{
-	//	msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择相机后再放置相机！"));
-	//	return;
-	//}
+	if (ui.comboBox_selectCamera->currentText().isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择相机后再放置相机！"));
+		return;
+	}
 
 	QString camera_ip = ui.comboBox_selectCamera->currentText();
 	QString camera_place_name = ui.lineEdit_cameraPositionName->text();
@@ -1249,6 +1459,31 @@ void MainMenu::UpdateSavedPersonTrackList()
 
 }
 
+//刷新已连接的相机下拉框列表
+void MainMenu::UpdateConnectedCameraList()
+{
+	ui.comboBox_selectCamera->clear();
+
+	auto it = camera_list_buff.begin();
+	while (it != camera_list_buff.end())
+	{
+		ui.comboBox_selectCamera->addItem(*it);
+		++it;
+	}
+}
+
+//显示当前选中的相机ID
+void MainMenu::ShowCurrentSelectCameraId(const QString &cam_ip)
+{
+	auto it = connected_camera_map.find(cam_ip);
+	if (it == connected_camera_map.end())
+	{
+		return;
+	}
+
+	ui.label_placeCameraId->setText(QString("%1").arg(it.value().camera_id));
+}
+
 //加载已有的楼宇地图
 void MainMenu::LoadExistedBuildingMap(const QString &select)
 {
@@ -1330,6 +1565,7 @@ void MainMenu::UpdateConnectedCameraInfoMap()
 	UpdateConnectedCameraIpList();
     RefreshDisplayCameraList();
 	ReadCameraConfigParamFile();
+	UpdateConnectedCameraList();
 }
 
 //刷新已连接相机IP列表
@@ -1505,7 +1741,7 @@ void MainMenu::ModifySelectedCamera()
 	{
 		cam_id = ui.lineEdit_cameraManageId->text().toInt();
 	}
-	qDebug() << "cur cam_id:" << cam_id;
+	//qDebug() << "cur cam_id:" << cam_id;
 	bool enable_image = ui.checkBox_imageStream->isChecked();
 	bool enable_video = ui.checkBox_videoStream->isChecked();
 		
@@ -1607,7 +1843,7 @@ void MainMenu::LoadCompareImg2()
 //人脸对比处理
 void MainMenu::DealFaceCompare()
 {
-    qDebug() << QString::fromLocal8Bit("人脸比对");
+    //qDebug() << QString::fromLocal8Bit("人脸比对");
     IplImage* img1 = cvLoadImage(comparePath1.toLocal8Bit());
 
     if (img1 == NULL)
@@ -1678,7 +1914,7 @@ void MainMenu::LoadDetectImg()
 //人脸检测处理
 void MainMenu::DealFaceDetect()
 {
-    qDebug() << QString::fromLocal8Bit("人脸检测");
+    //qDebug() << QString::fromLocal8Bit("人脸检测");
 
     ui.treeWidget_detectResult->clear();
   
@@ -1844,7 +2080,7 @@ void MainMenu::paintEvent(QPaintEvent * event)
 //改变大小时刷新视频窗口
 void MainMenu::resizeEvent(QResizeEvent * event)
 {
-	qDebug() << "-----------MainMenu resize event";
+	//qDebug() << "-----------MainMenu resize event";
 	RefreshVideoDisplayWindow();
 	RefreshBuildMapDisplay();
 }
@@ -1858,21 +2094,21 @@ void MainMenu::closeEvent(QCloseEvent * event)
 //事件过滤器
 bool MainMenu::eventFilter(QObject * watched, QEvent * event)
 {
-	if (watched == ui.label_buildingMap)
-	{
-		//if (event->type() == QEvent::Paint)
-		//{
-		//	//ui.label_buildingMap->paintEvent((QPaintEvent*)event);
-		//	//DisplayPlacedCameraPosition();
-		//	return true;
-		//}
-		//else 
-		if (event->type() == QEvent::Resize)
-		{
-			qDebug() << "-----------MainMenu eventFilter event";
-			return true;
-		}
-	} 
+	//if (watched == ui.label_buildingMap)
+	//{
+	//	//if (event->type() == QEvent::Paint)
+	//	//{
+	//	//	//ui.label_buildingMap->paintEvent((QPaintEvent*)event);
+	//	//	//DisplayPlacedCameraPosition();
+	//	//	return true;
+	//	//}
+	//	//else 
+	//	if (event->type() == QEvent::Resize)
+	//	{
+	//		qDebug() << "-----------MainMenu eventFilter event";
+	//		return true;
+	//	}
+	//} 
 
 	return QWidget::eventFilter(watched, event);
 }
@@ -1880,14 +2116,14 @@ bool MainMenu::eventFilter(QObject * watched, QEvent * event)
 //处理鼠标单击视频窗口
 void MainMenu::DealSingleClickedVideoLabel(int chn)
 {
-	qDebug() << "mouse single clicked video" << chn;
+	//qDebug() << "mouse single clicked video" << chn;
 	ChangeOneVideoStyle(chn);
 }
 
 //处理鼠标双击视频窗口
 void MainMenu::DealDoubleClickedVideoLabel(int chn)
 {
-	qDebug() << "mouse double clicked video" << chn;
+	//qDebug() << "mouse double clicked video" << chn;
 	ShowOneChnVideo(chn);
 }
 

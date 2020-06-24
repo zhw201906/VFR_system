@@ -28,7 +28,7 @@
 #define  SNAP_ITEM_SIZE            QSize(215, 140)
 #define  SNAP_RECG_ITEM_SIZE       QSize(225, 165)
 #define  CAMERA_SNAP_IMAGE_PATH    "./comtrack/camerasnapimage"
-
+#define  CAMERA_RECG_IMAGE_PATH    "./comtrack/camerarecgimage"
 //视频播放窗口点击时的状态切换
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
 #define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
@@ -36,8 +36,8 @@
 #define  SYSTEM_MODE_BUTTON_ENABLE_STYLE    "QPushButton{background-color:grey;}"
 #define  SYSTEM_MODE_BUTTON_DISABLE_STYLE   "QPushButton{background-color:white;}"
 
-#define  CAMERA_SNAP_RESULT_MAX_NUMS        100
-#define  CAMERA_SNAP_RECOGNIZE_MAX_NUMS     100
+#define  CAMERA_SNAP_RESULT_MAX_NUMS        500
+#define  CAMERA_SNAP_RECOGNIZE_MAX_NUMS     500
 
 //楼宇地图控件显示边框
 #define  BUILDING_MAP_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);}"
