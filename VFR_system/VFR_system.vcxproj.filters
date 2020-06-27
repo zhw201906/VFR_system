@@ -79,6 +79,9 @@
     <ClCompile Include="DisplaySnapRecognizeResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FaceLibInfoOperator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -123,6 +126,9 @@
     <QtMoc Include="DisplaySnapRecognizeResult.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="FaceLibInfoOperator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="VFR_system.ui">
@@ -150,6 +156,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="DisplaySnapRecognizeResult.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="FaceLibInfoOperator.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

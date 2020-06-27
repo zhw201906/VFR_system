@@ -161,6 +161,7 @@
     <ClCompile Include="DisplayUserInfoItem.cpp" />
     <ClCompile Include="DisplayVideoLabel.cpp" />
     <ClCompile Include="DisplayVideoThread.cpp" />
+    <ClCompile Include="FaceLibInfoOperator.cpp" />
     <ClCompile Include="FreeAdjustImageLabel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
@@ -179,6 +180,7 @@
     <QtUic Include="DisplaySnapRecognizeResult.ui" />
     <QtUic Include="DisplaySnapResult.ui" />
     <QtUic Include="DisplayUserInfoItem.ui" />
+    <QtUic Include="FaceLibInfoOperator.ui" />
     <QtUic Include="MainMenu.ui" />
     <QtUic Include="UserInformationOperator.ui" />
     <QtUic Include="VFR_system.ui" />
@@ -196,6 +198,7 @@
     <QtMoc Include="FreeAdjustImageLabel.h" />
     <QtMoc Include="DisplaySnapResult.h" />
     <QtMoc Include="DisplaySnapRecognizeResult.h" />
+    <QtMoc Include="FaceLibInfoOperator.h" />
     <ClInclude Include="third_lib\json\json-forwards.h" />
     <ClInclude Include="third_lib\json\json.h" />
     <ClInclude Include="third_lib\vz_SDK\inc\VzBoxClientSDK.h" />

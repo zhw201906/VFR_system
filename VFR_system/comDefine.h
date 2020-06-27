@@ -14,8 +14,8 @@
 #include <QImage>
 #include <QFileDialog>
 
-#define  OPEN_IMAGE_DIR          "d:/vz_box"
-//#define  OPEN_IMAGE_DIR          "d:/test_image"
+//#define  OPEN_IMAGE_DIR          "d:/vz_box"
+#define  OPEN_IMAGE_DIR          "d:/test_image"
 
 #define  FACE_IMAGE_CACHE_PATH   "../imgcache"
 

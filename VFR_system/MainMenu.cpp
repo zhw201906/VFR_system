@@ -252,6 +252,7 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.listWidget_userInfoList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
         p_operator_user_ui = NULL;
+        p_operator_lib_ui = NULL;
 		//p_user_info_item = NULL;
 		//p_user_list_item = NULL;
 		//p_user_info_item = new DisplayUserInfoItem[PAGE_USERINFO_NUM];
@@ -287,6 +288,10 @@ MainMenu::MainMenu(QWidget *parent)
         connect(ui.pushButton_addOneUser, &QPushButton::clicked, this, &MainMenu::AddOneUserInformation);
         connect(ui.pushButton_modifyUser, &QPushButton::clicked, this, &MainMenu::ModifyOneUserInformation);
 		connect(ui.listWidget_userGroupList, &QListWidget::itemClicked, this, &MainMenu::CurrentSelectFaceLib);
+
+        connect(ui.toolButton_addLibrary, &QToolButton::clicked, this, &MainMenu::AddOneFaceLibInfo);
+        connect(ui.toolButton_editLibrary, &QToolButton::clicked, this, &MainMenu::ModifyOneFaceLibInfo);
+        connect(ui.toolButton_delLibrary, &QToolButton::clicked, this, &MainMenu::DeleteOneFaceLib);
 	}
 
 /**************************************************抓拍查询界面********************************************************/
@@ -1092,12 +1097,11 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 {
 	CleanAllUserInfoItem();
 
-	static int sub_page_num = PAGE_USERINFO_NUM / PAGE_USER_NUM_BACE;
-	int cur_page_num = sub_page_num;
+    int cur_page_num = PAGE_SUB_NUM;
 	do
 	{
 		VZ_FACE_LIB_SEARCH_CONDITION condition = { 0 };
-		condition.page_num = page_num * sub_page_num - cur_page_num + 1;
+		condition.page_num = page_num * PAGE_SUB_NUM - cur_page_num + 1;
 		condition.page_count = PAGE_USER_NUM_BACE;
 
 		VZ_FACE_USER_RESULT cur_group_toal_user_info_ = { 0 };
@@ -1108,7 +1112,7 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 			return;
 		}
 
-		if (page_num == 1 && cur_page_num == sub_page_num)
+		if (page_num == 1 && cur_page_num == PAGE_SUB_NUM)
 		{
 			//更新当前库的总人数
 			group_cur_total_face_num_ = cur_group_toal_user_info_.total_count;
@@ -1125,14 +1129,14 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 
 		qDebug() << "All user:" << group_cur_total_face_num_;
 		qDebug() << "Cur face:" << cur_group_toal_user_info_.face_count;
-
+        user_detail_info_map.clear();
 		for (int i = 0; i < cur_group_toal_user_info_.face_count; i++)
 		{
 			QImage img;
 			QString face_path(OPEN_IMAGE_DIR);
 			face_path.append(QString("/face%1.jpg").arg(cur_group_toal_user_info_.face_items[i].pic_index));
 			FILE *face_data = fopen(face_path.toStdString().c_str(), "wb+");
-			if (face_data)
+			if (face_data)   //通过url获取用户人脸图
 			{
 				int pFaceSize = 1024 * 1024;
 				char *pFacedata = (char*)malloc(pFaceSize);
@@ -1151,19 +1155,29 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 					img.load(face_path);
 				}
 			}
+            UserInfo user_info;
+            strcpy(user_info.user_name, cur_group_toal_user_info_.face_items[i].user_name);
+            strcpy(user_info.db_name, cur_group_toal_user_info_.face_items[i].db_name);
+            strcpy(user_info.card_number, cur_group_toal_user_info_.face_items[i].card_number);
+            strcpy(user_info.group_id, cur_group_toal_user_info_.face_items[i].group_id);
+            strcpy(user_info.phone, cur_group_toal_user_info_.face_items[i].phone);
+            strcpy(user_info.province, cur_group_toal_user_info_.face_items[i].province);
+            strcpy(user_info.city, cur_group_toal_user_info_.face_items[i].city);
+            strcpy(user_info.birthday, cur_group_toal_user_info_.face_items[i].birthday);
+            strcpy(user_info.address, cur_group_toal_user_info_.face_items[i].address);
+            strcpy(user_info.img_url, cur_group_toal_user_info_.face_items[i].img_url);
+            user_info.face_id = cur_group_toal_user_info_.face_items[i].face_id;
+            user_info.pic_index = cur_group_toal_user_info_.face_items[i].pic_index;
+            user_info.user_type = cur_group_toal_user_info_.face_items[i].user_type;
+            user_info.sex = cur_group_toal_user_info_.face_items[i].sex;
+            int pic_idx = user_info.pic_index;
+            user_detail_info_map[pic_idx] = user_info;
+
 			QListWidgetItem *p_user_list_item = new QListWidgetItem(ui.listWidget_userInfoList);
 			DisplayUserInfoItem *p_user_info_item = new DisplayUserInfoItem(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
-
-			//p_user_info_item->SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
 			p_user_list_item->setSizeHint(USERINFO_ITEM_SIZE);
 			ui.listWidget_userInfoList->addItem(p_user_list_item);
 			ui.listWidget_userInfoList->setItemWidget(p_user_list_item, p_user_info_item);
-
-			//p_user_info_item[i].SetDisplayItemInfo(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
-			//p_user_list_item[i].setSizeHint(USERINFO_ITEM_SIZE);
-
-			//ui.listWidget_userInfoList->addItem(&p_user_list_item[i]);
-			//ui.listWidget_userInfoList->setItemWidget(&p_user_list_item[i], &p_user_info_item[i]);
 		}
 		if (cur_group_toal_user_info_.face_count < PAGE_USER_NUM_BACE)
 		{
@@ -1172,9 +1186,8 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	} while (cur_page_num-- > 1);
 
 	ui.label_totalUserInfo->clear();
-	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共%2 页     %1 条记录    当前 %3 页").arg(group_cur_total_face_num_)
+	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共 %2 页     %1 条记录    当前 %3 页").arg(group_cur_total_face_num_)
 									.arg(user_list_cur_page_total_).arg(user_list_cur_page_num_));
-
 }
 
 //当前选中的人脸库,需要记录并刷新库中人员信息
@@ -1281,6 +1294,138 @@ void MainMenu::CleanAllUserInfoItem()
 		ui.listWidget_userInfoList->removeItemWidget(item);
 		delete item;
 	}
+}
+
+//添加一个人脸库
+void MainMenu::AddOneFaceLibInfo()
+{
+    if (p_operator_lib_ui == NULL)
+    {
+        p_operator_lib_ui = new FaceLibInfoOperator;
+    }
+
+    p_operator_lib_ui->show();
+    connect(p_operator_lib_ui, &FaceLibInfoOperator::CancelLibOper, [=]() {
+        qDebug() << "main canael face lib oper";
+        p_operator_lib_ui->close();
+        delete p_operator_lib_ui;
+        p_operator_lib_ui = NULL;
+    });
+    connect(p_operator_lib_ui, &FaceLibInfoOperator::SaveAddLibOper, this, &MainMenu::DealAddOneFaceLib);
+ 
+}
+
+//处理添加一个人脸库
+void MainMenu::DealAddOneFaceLib(FaceLibInfo & face_info)
+{
+    if (!vzbox_online_status)
+        return;
+
+    VZ_FACE_LIB_ITEM lib_info;
+    lib_info.threshold_value = face_info.threshold_value;
+    lib_info.id = face_info.id;
+    lib_info.enable = face_info.enable;
+    lib_info.lib_type = face_info.lib_type;
+    strcpy(lib_info.name, face_info.name);
+    strcpy(lib_info.remark, face_info.remark);
+
+    int ret = VzClient_FaceRecgLibOperate(vzbox_handle_, &lib_info, 1);
+    if (ret != VZSDK_SUCCESS)
+    {
+        p_operator_lib_ui->ShowErrorMessage(ERROR_MSG, QString::fromLocal8Bit("新建人脸库失败！"));
+        return;
+    }
+
+    p_operator_lib_ui->ShowErrorMessage(REMARK_MSG, QString::fromLocal8Bit("创建人脸库成功！"));
+    RefreshUserGroupList();
+}
+
+//修改一个人脸库
+void MainMenu::ModifyOneFaceLibInfo()
+{
+    if (p_operator_lib_ui == NULL)
+    {
+        QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
+        p_operator_lib_ui = new FaceLibInfoOperator(face_lib_info_map[item->text()]);
+    }
+
+    connect(p_operator_lib_ui, &FaceLibInfoOperator::CancelLibOper, [=]() {
+        delete p_operator_lib_ui;
+        p_operator_lib_ui = NULL;
+    });
+    connect(p_operator_lib_ui, &FaceLibInfoOperator::SaveModifyLibOper, this, &MainMenu::DealModifyOneFaceLib);
+
+    p_operator_lib_ui->show();
+}
+
+//处理修改人脸库信息
+void MainMenu::DealModifyOneFaceLib(FaceLibInfo & face_info)
+{
+    if (!vzbox_online_status)
+        return;
+
+    VZ_FACE_LIB_ITEM lib_info;
+    lib_info.threshold_value = face_info.threshold_value;
+    lib_info.id = face_info.id;
+    lib_info.enable = face_info.enable;
+    lib_info.lib_type = face_info.lib_type;
+    strcpy(lib_info.name, face_info.name);
+    strcpy(lib_info.remark, face_info.remark);
+
+    int ret = VzClient_FaceRecgLibOperate(vzbox_handle_, &lib_info, 3);
+    if (ret != VZSDK_SUCCESS)
+    {
+        p_operator_lib_ui->ShowErrorMessage(ERROR_MSG, QString::fromLocal8Bit("修改人脸库失败！"));
+        return;
+    }
+
+    p_operator_lib_ui->ShowErrorMessage(REMARK_MSG, QString::fromLocal8Bit("修改人脸库成功！"));
+    RefreshUserGroupList();
+}
+
+//删除选中的人脸库
+void MainMenu::DeleteOneFaceLib()
+{
+    if (!vzbox_online_status)
+        return;
+
+    QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
+    if (item->text().isEmpty())
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("未选中人脸库！"));
+        return;
+    }
+
+    QMessageBox::StandardButton btn_tmp = msg_box_.question(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("确定删除人脸库 %1").arg(item->text()),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    if (btn_tmp == QMessageBox::No)
+    {
+        return;
+    }
+
+    auto it = face_lib_info_map.find(item->text());
+    if (it == face_lib_info_map.end())
+    {
+        return;
+    }
+
+    VZ_FACE_LIB_ITEM lib_info;
+    lib_info.threshold_value = it.value().threshold_value;
+    lib_info.id = it.value().id;
+    lib_info.enable = it.value().enable;
+    lib_info.lib_type = it.value().lib_type;
+    strcpy(lib_info.name, it.value().name);
+    strcpy(lib_info.remark, it.value().remark);
+    
+    int ret = VzClient_FaceRecgLibOperate(vzbox_handle_, &lib_info, 2);
+    if(ret!=VZSDK_SUCCESS)
+    {
+        msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("删除人脸库失败！"));
+        return;
+    }
+    msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("删除人脸库成功！"));
+    RefreshUserGroupList();
+
 }
 
 //载入建筑平面图照片
@@ -1835,7 +1980,7 @@ void MainMenu::DeleteSelectedCamera()
 	auto it = connected_camera_map.find(cur_selected_camera_ip);
 	if (it == connected_camera_map.end())
 	{
-		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("修改相机属性失败！"));
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("未选中相机！"));
 		return;
 	}
 	//char *cam_ip[32] = { 0 };
