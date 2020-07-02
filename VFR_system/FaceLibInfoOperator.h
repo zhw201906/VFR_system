@@ -19,6 +19,8 @@ public:
 
     ~FaceLibInfoOperator();
 
+	inline FACE_LIB_OPER GetCurOperMode()const { return oper_mode; };
+
     void ShowErrorMessage(ERROR_LIB_OPER_MSG type, QString &msg);
 
     void SaveOper();

@@ -513,12 +513,12 @@ void MainMenu::SystemAllInit()
 	}
 
 	//设置抓拍识别回调显示
-	ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
-	if (ret != VZSDK_SUCCESS)
-	{
-		qDebug() << "set recognize callback falied...";
-		//return;
-	}
+	//ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
+	//if (ret != VZSDK_SUCCESS)
+	//{
+	//	qDebug() << "set recognize callback falied...";
+	//	//return;
+	//}
 }
 
 //刷新显示的相机列表（同时刷新在线监控和相机管理界面）
@@ -803,7 +803,8 @@ void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face
 
 		QImage img;
 		QString face_path(CAMERA_SNAP_IMAGE_PATH);
-		face_path.append(QString("/face%1_%2.jpg").arg(i).arg(face_result->msec));
+		//face_path.append(QString("/face%1_%2.jpg").arg(i).arg(face_result->msec));
+		face_path.append(QString("/face.jpg"));
 		FILE *face_data = fopen(face_path.toStdString().c_str(), "wb+");
 		if (face_data)
 		{
@@ -883,7 +884,8 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 
 		//加载库图片
 		QString face_recg_path = QString(CAMERA_RECG_IMAGE_PATH);
-		face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+		//face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+		face_recg_path.append(QString("/lib.jpg"));
 		FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
 		if (face_data)
 		{
@@ -908,8 +910,9 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 
 		//加载抓拍图
 		QImage img;
-		QString face_snap_path(CAMERA_SNAP_IMAGE_PATH);
-		face_snap_path.append(QString("/snap%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+		QString face_snap_path(CAMERA_RECG_IMAGE_PATH);
+		face_snap_path.append(QString("/snap_recg.jpg"));
+		//face_snap_path.append(QString("/snap%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
 		FILE *snap_data = fopen(face_snap_path.toStdString().c_str(), "wb+");
 		if (snap_data)
 		{
@@ -1133,7 +1136,7 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 		for (int i = 0; i < cur_group_toal_user_info_.face_count; i++)
 		{
 			QImage img;
-			QString face_path(OPEN_IMAGE_DIR);
+			QString face_path(FACE_IMAGE_CACHE_PATH);
 			face_path.append(QString("/face%1.jpg").arg(cur_group_toal_user_info_.face_items[i].pic_index));
 			FILE *face_data = fopen(face_path.toStdString().c_str(), "wb+");
 			if (face_data)   //通过url获取用户人脸图
@@ -1248,13 +1251,17 @@ void MainMenu::DealOperatorUserInfo(UserInfo & user, USER_OPER oper)
 	VZ_FACE_USER_RESULT user_info = { 0 };
 	user_info.face_count = 1;
 	user_info.total_count = 1;
-	user_info.face_items->sex = user.sex;
+	user_info.face_items[0].sex = user.sex;
 	strcpy(user_info.face_items[0].user_name, user.user_name);
 	strcpy(user_info.face_items[0].birthday, user.birthday);
 	strcpy(user_info.face_items[0].phone, user.phone);
 	strcpy(user_info.face_items[0].province, user.province);
 	strcpy(user_info.face_items[0].city, user.city);
 	strcpy(user_info.face_items[0].address, user.address);
+	char lib_id[50] = { 0 };
+	sprintf(lib_id, "%d", group_cur_id_);
+	strcpy(user_info.face_items[0].group_id, lib_id);
+	qDebug() << "url:" << QString(user.img_url) << "lib_id:" << QString(lib_id);
 	QImage image;
 	image.load(QString(user.img_url));
 	user_info.face_items[0].pic_data = (char *)image.bits();
@@ -1283,6 +1290,7 @@ void MainMenu::DealOperatorUserInfo(UserInfo & user, USER_OPER oper)
     p_operator_user_ui->close();
     delete p_operator_user_ui;
     p_operator_user_ui = NULL;
+
 }
 
 //清空用户信息中的全部框
@@ -1303,6 +1311,12 @@ void MainMenu::AddOneFaceLibInfo()
     {
         p_operator_lib_ui = new FaceLibInfoOperator;
     }
+	else
+	{
+		delete p_operator_lib_ui;
+		p_operator_lib_ui = NULL;
+		p_operator_lib_ui = new FaceLibInfoOperator;
+	}
 
     p_operator_lib_ui->show();
     connect(p_operator_lib_ui, &FaceLibInfoOperator::CancelLibOper, [=]() {
@@ -1330,7 +1344,7 @@ void MainMenu::DealAddOneFaceLib(FaceLibInfo & face_info)
     strcpy(lib_info.remark, face_info.remark);
 
     int ret = VzClient_FaceRecgLibOperate(vzbox_handle_, &lib_info, 1);
-    if (ret != VZSDK_SUCCESS)
+    if (ret == VZSDK_FAILED)
     {
         p_operator_lib_ui->ShowErrorMessage(ERROR_MSG, QString::fromLocal8Bit("新建人脸库失败！"));
         return;
@@ -1338,6 +1352,8 @@ void MainMenu::DealAddOneFaceLib(FaceLibInfo & face_info)
 
     p_operator_lib_ui->ShowErrorMessage(REMARK_MSG, QString::fromLocal8Bit("创建人脸库成功！"));
     RefreshUserGroupList();
+	delete p_operator_lib_ui;
+	p_operator_lib_ui = NULL;
 }
 
 //修改一个人脸库
@@ -1348,6 +1364,13 @@ void MainMenu::ModifyOneFaceLibInfo()
         QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
         p_operator_lib_ui = new FaceLibInfoOperator(face_lib_info_map[item->text()]);
     }
+	else
+	{
+		delete p_operator_lib_ui;
+		p_operator_lib_ui = NULL;
+		QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
+		p_operator_lib_ui = new FaceLibInfoOperator(face_lib_info_map[item->text()]);	
+	}
 
     connect(p_operator_lib_ui, &FaceLibInfoOperator::CancelLibOper, [=]() {
         delete p_operator_lib_ui;
@@ -1373,7 +1396,7 @@ void MainMenu::DealModifyOneFaceLib(FaceLibInfo & face_info)
     strcpy(lib_info.remark, face_info.remark);
 
     int ret = VzClient_FaceRecgLibOperate(vzbox_handle_, &lib_info, 3);
-    if (ret != VZSDK_SUCCESS)
+    if (ret == VZSDK_FAILED)
     {
         p_operator_lib_ui->ShowErrorMessage(ERROR_MSG, QString::fromLocal8Bit("修改人脸库失败！"));
         return;
@@ -1381,6 +1404,8 @@ void MainMenu::DealModifyOneFaceLib(FaceLibInfo & face_info)
 
     p_operator_lib_ui->ShowErrorMessage(REMARK_MSG, QString::fromLocal8Bit("修改人脸库成功！"));
     RefreshUserGroupList();
+	delete p_operator_lib_ui;
+	p_operator_lib_ui = NULL;
 }
 
 //删除选中的人脸库

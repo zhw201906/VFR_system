@@ -17,6 +17,7 @@ FaceLibInfoOperator::FaceLibInfoOperator(QWidget *parent)
     connect(ui.pushButton_save, &QPushButton::clicked, this, &FaceLibInfoOperator::SaveOper);
     connect(ui.horizontalSlider_threshold, &QSlider::valueChanged, this, &FaceLibInfoOperator::ThresholdChanged);
 
+	ui.comboBox_libStatus->setCurrentIndex(1);
     ui.horizontalSlider_threshold->setValue(40);
 }
 
@@ -36,6 +37,13 @@ FaceLibInfoOperator::FaceLibInfoOperator(FaceLibInfo & lib_info, QWidget * paren
     connect(ui.pushButton_cancel, &QPushButton::clicked, this, &FaceLibInfoOperator::CancelOper);
     connect(ui.pushButton_save, &QPushButton::clicked, this, &FaceLibInfoOperator::SaveOper);
     connect(ui.horizontalSlider_threshold, &QSlider::valueChanged, this, &FaceLibInfoOperator::ThresholdChanged);
+
+	ui.lineEdit_libName->setText(QString::fromLocal8Bit(lib_info.name));
+	ui.textEdit_remark->setText(QString::fromLocal8Bit(lib_info.remark));
+	ui.horizontalSlider_threshold->setValue(lib_info.threshold_value);
+	ui.comboBox_libType->setCurrentIndex(lib_info.lib_type);
+	ui.comboBox_libStatus->setCurrentIndex(lib_info.enable);
+	ui.label_libId->setText(QString("%1").arg(lib_info.id));
 }
 
 FaceLibInfoOperator::~FaceLibInfoOperator()
@@ -60,8 +68,8 @@ void FaceLibInfoOperator::SaveOper()
     face_info.enable = ui.comboBox_libStatus->currentIndex();
     face_info.threshold_value = ui.horizontalSlider_threshold->value();
     face_info.lib_type = ui.comboBox_libType->currentIndex();
-    strcpy(face_info.name, ui.lineEdit_libName->text().toUtf8());
-    strcpy(face_info.remark, ui.textEdit_remark->toPlainText().toUtf8());
+    strcpy(face_info.name, ui.lineEdit_libName->text().toLocal8Bit());
+    strcpy(face_info.remark, ui.textEdit_remark->toPlainText().toLocal8Bit());
 
     if (oper_mode == ADD_FACE_LIB)
     {

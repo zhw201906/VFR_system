@@ -185,12 +185,12 @@
      </property>
      <item>
       <property name="text">
-       <string>启动</string>
+       <string>关闭</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>关闭</string>
+       <string>启动</string>
       </property>
      </item>
     </widget>
@@ -333,17 +333,17 @@
      </property>
      <item>
       <property name="text">
+       <string>未知</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>白名单</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>黑名单</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>普通人员</string>
       </property>
      </item>
     </widget>
