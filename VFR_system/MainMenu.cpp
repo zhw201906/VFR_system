@@ -505,20 +505,20 @@ void MainMenu::SystemAllInit()
 	RefreshUserInfoList();
 
 	//设置抓拍回调显示
-	int ret = VzLPRClient_SetFaceResultCallBack(vzbox_handle_, &MainMenu::CameraSnapCallBack, (void *)this);
-	if (ret != VZSDK_SUCCESS)
-	{
-		qDebug() << "set snap callback falied...";
-		//return;
-	}
-
-	//设置抓拍识别回调显示
-	//ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
+	//int ret = VzLPRClient_SetFaceResultCallBack(vzbox_handle_, &MainMenu::CameraSnapCallBack, (void *)this);
 	//if (ret != VZSDK_SUCCESS)
 	//{
-	//	qDebug() << "set recognize callback falied...";
+	//	qDebug() << "set snap callback falied...";
 	//	//return;
 	//}
+
+	//设置抓拍识别回调显示
+	int ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << "set recognize callback falied...";
+		//return;
+	}
 }
 
 //刷新显示的相机列表（同时刷新在线监控和相机管理界面）
@@ -863,6 +863,7 @@ void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face
 void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx * face_result, void * pUserData)
 {
 	static int recg_i = 0;
+	static int snap_i = 0;
 	//qDebug() << "recognize success:" << recg_i << "  person_num:" << face_result->snap_num;
 	MainMenu *p_menu = (MainMenu*)pUserData;
 	int i = 0;
@@ -882,31 +883,14 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 		strcpy(face_info.recg_prov, face_result->face_items[i].recg_prov);
 		strcpy(face_info.datetime, face_result->datetime);
 
-		//加载库图片
-		QString face_recg_path = QString(CAMERA_RECG_IMAGE_PATH);
-		//face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
-		face_recg_path.append(QString("/lib.jpg"));
-		FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
-		if (face_data)
-		{
-			int face_size = 1024 * 1024;
-			char*p_face = (char *)malloc(face_size);
-			memset(p_face, 0, face_size);
-
-			int ret = VzClient_LoadFaceImageByPath(p_menu->vzbox_handle_, face_info.recg_img_url, p_face, &face_size);
-			if (ret != VZSDK_SUCCESS)
-			{
-				fclose(face_data);
-				free(p_face);
-				//continue;
-			}
-			else
-			{
-				fwrite(p_face, sizeof(char), face_size, face_data);
-				fclose(face_data);
-				free(p_face);
-			}
-		}
+		FaceSnapInfo snap_info;
+		snap_info.sex = face_result->face_items[i].sex;
+		snap_info.age = face_result->face_items[i].age;
+		snap_info.have_glasses = face_result->face_items[i].have_glasses;
+		snap_info.have_hat = face_result->face_items[i].have_hat;
+		snap_info.msec = face_result->msec;
+		snap_info.confidence = face_result->face_items[i].confidence;
+		strcpy(snap_info.datetime, face_result->datetime);
 
 		//加载抓拍图
 		QImage img;
@@ -919,19 +903,66 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 			fwrite(face_result->face_imgs[i].img_buf, sizeof(unsigned char),
 				face_result->face_imgs[i].img_len, snap_data);
 			fclose(snap_data);
-		}		
+		}
 
-		p_menu->p_recognize_result_buff_ui[recg_i].SetShowRecognizeResult(face_info, face_snap_path, face_recg_path);
-		p_menu->p_recognize_result_item[recg_i].setSizeHint(SNAP_RECG_ITEM_SIZE);
-		p_menu->ui.listWidget_nowRecognize->addItem(&p_menu->p_recognize_result_item[recg_i]);
-		p_menu->ui.listWidget_nowRecognize->setItemWidget(&p_menu->p_recognize_result_item[recg_i],
-			&p_menu->p_recognize_result_buff_ui[recg_i]);
-		p_menu->ui.listWidget_nowRecognize->scrollToBottom();
-
-		recg_i++;
-		if (recg_i >= CAMERA_SNAP_RECOGNIZE_MAX_NUMS)
+		//根据识别结果判断是否开启人脸识别，未开启时不加载识别结果
+		if (face_info.recg_img_url != NULL && face_info.recg_face_score > 0)
 		{
-			recg_i = 0;
+			qDebug() << "recg_name:" << QString::fromLocal8Bit(face_info.recg_people_name) << "  time:" << QString::fromLocal8Bit(face_info.datetime) << "  msec:" << face_info.msec;
+
+			//加载库图片
+			QString face_recg_path = QString(CAMERA_RECG_IMAGE_PATH);
+			//face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
+			face_recg_path.append(QString("/lib.jpg"));
+			FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
+			if (face_data)
+			{
+				int face_size = 1024 * 1024;
+				char*p_face = (char *)malloc(face_size);
+				memset(p_face, 0, face_size);				
+				int ret = VzClient_LoadFaceImageByPath(p_menu->vzbox_handle_, face_info.recg_img_url, p_face, &face_size);
+				if (ret != VZSDK_SUCCESS)
+				{
+					fclose(face_data);
+					free(p_face);
+					//continue;
+				}
+				else
+				{
+					fwrite(p_face, sizeof(char), face_size, face_data);
+					fclose(face_data);
+					free(p_face);
+				}
+			}
+
+			//显示抓拍识别结果
+			p_menu->p_recognize_result_buff_ui[recg_i].SetShowRecognizeResult(face_info, face_snap_path, face_recg_path);
+			p_menu->p_recognize_result_item[recg_i].setSizeHint(SNAP_RECG_ITEM_SIZE);
+			p_menu->ui.listWidget_nowRecognize->addItem(&p_menu->p_recognize_result_item[recg_i]);
+			p_menu->ui.listWidget_nowRecognize->setItemWidget(&p_menu->p_recognize_result_item[recg_i],
+				&p_menu->p_recognize_result_buff_ui[recg_i]);
+			p_menu->ui.listWidget_nowRecognize->scrollToBottom();
+
+			recg_i++;
+			if (recg_i >= CAMERA_SNAP_RECOGNIZE_MAX_NUMS)
+			{
+				recg_i = 0;
+				//p_menu->ui.listWidget_nowSnap->clear();
+			}
+		}
+
+		//显示抓拍结果
+		p_menu->p_snap_result_buff_ui[snap_i].SetShowData(snap_info, face_snap_path);
+		p_menu->p_snap_result_item[snap_i].setSizeHint(SNAP_ITEM_SIZE);
+		p_menu->ui.listWidget_nowSnap->addItem(&p_menu->p_snap_result_item[snap_i]);
+		p_menu->ui.listWidget_nowSnap->setItemWidget(&p_menu->p_snap_result_item[snap_i],
+			&p_menu->p_snap_result_buff_ui[snap_i]);
+		p_menu->ui.listWidget_nowSnap->scrollToBottom();
+
+		snap_i++;
+		if (snap_i >= CAMERA_SNAP_RESULT_MAX_NUMS)
+		{
+			snap_i = 0;
 			//p_menu->ui.listWidget_nowSnap->clear();
 		}
 	}
@@ -1189,7 +1220,7 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 	} while (cur_page_num-- > 1);
 
 	ui.label_totalUserInfo->clear();
-	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共 %2 页     %1 条记录    当前 %3 页").arg(group_cur_total_face_num_)
+	ui.label_totalUserInfo->setText(QString::fromLocal8Bit("共 %2 页     %1 条记录    当前第 %3 页").arg(group_cur_total_face_num_)
 									.arg(user_list_cur_page_total_).arg(user_list_cur_page_num_));
 }
 
@@ -1204,6 +1235,7 @@ void MainMenu::CurrentSelectFaceLib(QListWidgetItem * item)
 	}
 
 	group_cur_id_ = it.value().id;
+	user_list_cur_page_num_ = 1;
 	DisplaynPageUserInfoList(group_cur_id_);
 }
 
