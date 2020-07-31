@@ -19,11 +19,10 @@
 #include "DisplaySnapResult.h"
 #include "DisplaySnapRecognizeResult.h"
 #include "FaceLibInfoOperator.h"
+#include "FileOperator.h"
+#include <string>
 
-
-
-
-#define  CAMERA_NUM_LIMIT      9
+#define  CAMERA_NUM_LIMIT      16
 #define  FRAME_NUM_SIZE_LIMIT  3
 
 #define  PAGE_USER_NUM_BACE    25
@@ -80,6 +79,7 @@ public:
 	void NineWindowsDisplay();
 	void ShowOneChnVideo(int chnId);
 	void ChangeOneVideoStyle(int chnId);
+	void SaveSnapRecgInfo(QString &path, QString &info);
 
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
@@ -126,7 +126,7 @@ public:
 	void UpdateConnectedCameraList();
 	void ShowCurrentSelectCameraId(const QString &cam_ip);
 	void LoadExistedBuildingMap(const QString &str);
-
+	void ReadSnapRectJsonFile(const QString &user_name);
 
 	//相机管理
 	void UpdateConnectedCameraInfoMap();

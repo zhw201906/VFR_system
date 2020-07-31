@@ -714,6 +714,31 @@ void MainMenu::ChangeOneVideoStyle(int chnId)
 	video_display_label[chnId].setStyleSheet(ClICKED_LABEL_STYLE);
 }
 
+//保存抓拍与识别结果信息到本地文件中
+void MainMenu::SaveSnapRecgInfo(QString &path, QString & info)
+{
+	QFile file(path);
+	bool ret = file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+	if (!ret)
+	{
+		qDebug() << "open recg_info file failed...";
+	}
+
+	QString write_context;
+	if (file.size() <= 0)
+	{
+		write_context = QString("{") + info + QString("}");
+	}
+	else
+	{
+		write_context = QString(",{") + info + QString("}");
+		file.seek(file.size());
+	}
+
+	file.write(write_context.toUtf8());
+	file.close();
+}
+
 //相机视频回调缓存（通过定时器中断回调显示，效果相对较流畅）
 void MainMenu::VideoFrameCallBack(VzLPRClientHandle handle, void * pUserData, const VzYUV420P * pFrame)
 {
@@ -893,9 +918,8 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 		strcpy(snap_info.datetime, face_result->datetime);
 
 		//加载抓拍图
-		QImage img;
-		QString face_snap_path(CAMERA_RECG_IMAGE_PATH);
-		face_snap_path.append(QString("/snap_recg.jpg"));
+		QString face_snap_path(CAMERA_SNAP_IMAGE_NAME);
+		//face_snap_path.append(QString("/snap_recg.jpg"));
 		//face_snap_path.append(QString("/snap%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
 		FILE *snap_data = fopen(face_snap_path.toStdString().c_str(), "wb+");
 		if (snap_data)
@@ -905,15 +929,32 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 			fclose(snap_data);
 		}
 
+		//加载抓拍大图
+		QString big_face_snap_path(CAMERA_SNAP_BIG_IMAGE_NAME);
+		FILE *big_snap_data = fopen(big_face_snap_path.toStdString().c_str(), "wb+");
+		if (big_snap_data)
+		{
+			fwrite(face_result->snap_img[i].img_buf, sizeof(unsigned char),
+				face_result->snap_img[i].img_len, big_snap_data);
+			fclose(big_snap_data);
+		}
+
 		//根据识别结果判断是否开启人脸识别，未开启时不加载识别结果
 		if (face_info.recg_img_url != NULL && face_info.recg_face_score > 0)
 		{
-			qDebug() << "recg_name:" << QString::fromLocal8Bit(face_info.recg_people_name) << "  time:" << QString::fromLocal8Bit(face_info.datetime) << "  msec:" << face_info.msec;
+			QDateTime date_time = QDateTime::currentDateTime();
+			// 字符串格式化
+			//QString times_tamp = date_time.toString("yyyy-MM-dd hh:mm:ss.zzz");
+			// 获取毫秒值
+			//int ms = date_time.time().msec();
+			// 转换成时间戳
+			qint64 epoch_time = date_time.toMSecsSinceEpoch();
+			//qDebug() << "times_tamp:" << times_tamp << "  ms:" << ms << "   epoch_time:" << epoch_time;
 
 			//加载库图片
-			QString face_recg_path = QString(CAMERA_RECG_IMAGE_PATH);
+			QString face_recg_path = QString(CAMERA_LIBRARY_IMAGE_NAME);
 			//face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
-			face_recg_path.append(QString("/lib.jpg"));
+			//face_recg_path.append(QString("/lib.jpg"));
 			FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
 			if (face_data)
 			{
@@ -949,6 +990,35 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 				recg_i = 0;
 				//p_menu->ui.listWidget_nowSnap->clear();
 			}
+#if OPEN_SAVE_RECG_RET
+			if (strlen(face_info.recg_people_name) != 0)
+			{
+				QString recg_dir = QString(CAMERA_RECG_IMAGE_PATH) + QString('/') + QString::fromLocal8Bit(face_info.recg_people_name);
+				if (!FileOperator::DirIsExisted(recg_dir))
+				{
+					qDebug() << "test recg dir failed...";
+				}
+				else
+				{
+					//检测文件夹是否创建
+					QString path = recg_dir + QString('/') + QString::fromLocal8Bit(face_info.recg_people_name) + ".json";
+					QString context = QString("\"time_stamp\":") + QString("\"%1\",\n").arg(epoch_time);
+					context.append("\"camera_id\":");
+					context.append(QString("%1").arg(face_result->channel_id));
+					p_menu->SaveSnapRecgInfo(path, context);
+
+					//存储抓拍大图
+					QString big_path = recg_dir + QString("/big_%1.jpg").arg(epoch_time);
+					QFile big_snap_file(big_face_snap_path);
+					big_snap_file.copy(big_path);
+
+					//存储抓拍小图
+					QString copy_path = recg_dir + QString("/%1.jpg").arg(epoch_time);
+					QFile snap_file(face_snap_path);
+					snap_file.copy(copy_path);
+				}
+			}
+#endif
 		}
 
 		//显示抓拍结果
@@ -1692,6 +1762,8 @@ void MainMenu::DeleteExistedBuildingMap()
 	dir.setPath(del_map);
 	dir.removeRecursively();
 	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("删除地图 %1 成功！").arg(cur_map));
+	UpdateExistedBuildingMapList();
+	ui.label_buildingMap->clear();
 }
 
 //更新已有的地图列表
@@ -1787,6 +1859,17 @@ void MainMenu::LoadExistedBuildingMap(const QString &select)
 	ui.label_buildingMap->DealSelectedBuildingMap(camera_info);
 }
 
+//读取抓拍识别的json文件，根据文件内容绘制轨迹图
+void MainMenu::ReadSnapRectJsonFile(const QString & user_name)
+{
+	if (user_name.isEmpty())
+	{
+		return;
+	}
+
+
+}
+
 //更新已连接的相机map
 void MainMenu::UpdateConnectedCameraInfoMap()
 {
@@ -1809,6 +1892,7 @@ void MainMenu::UpdateConnectedCameraInfoMap()
 		QString cam_ip(camera_list.cam_items[i].ip);
 		CameraAttribute cam_attri;
 		cam_attri.camera_id = 0;
+		cam_attri.channel_id = camera_list.cam_items[i].chn_id + 1;
 
 		strcpy(cam_attri.camera_item.ip, camera_list.cam_items[i].ip);
 		strcpy(cam_attri.camera_item.username, camera_list.cam_items[i].username);

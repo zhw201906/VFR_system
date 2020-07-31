@@ -13,6 +13,8 @@
 #include <functional> 
 #include <QImage>
 #include <QFileDialog>
+#include <QDateTime>
+#include <QDebug>
 
 #define  OPEN_IMAGE_DIR          "d:/vz_box"
 //#define  OPEN_IMAGE_DIR          "d:/test_image"
@@ -29,6 +31,12 @@
 #define  SNAP_RECG_ITEM_SIZE       QSize(225, 165)
 #define  CAMERA_SNAP_IMAGE_PATH    "./comtrack/camerasnapimage"
 #define  CAMERA_RECG_IMAGE_PATH    "./comtrack/camerarecgimage"
+#define  CAMERA_LIBRARY_IMAGE_NAME "./comtrack/cacheImage/lib_face.jpg"
+#define  CAMERA_SNAP_IMAGE_NAME    "./comtrack/cacheImage/snap_face.jpg"
+#define  CAMERA_SNAP_BIG_IMAGE_NAME  "./comtrack/cacheImage/big_snap_face.jpg"
+
+#define  OPEN_SAVE_RECG_RET   1
+
 //视频播放窗口点击时的状态切换
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"
 #define  ClICKED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);background-color: rgb(200, 200, 200);}"
