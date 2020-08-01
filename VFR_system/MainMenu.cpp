@@ -317,6 +317,7 @@ MainMenu::MainMenu(QWidget *parent)
 		connect(ui.comboBox_existedBuindingMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged), this, &MainMenu::LoadExistedBuildingMap);
 		connect(ui.pushButton_resetCameraPlace, &QPushButton::clicked, this, &MainMenu::ResetCreateNewBuildingMap);
 		connect(ui.comboBox_selectCamera, &QComboBox::currentTextChanged, this, &MainMenu::ShowCurrentSelectCameraId);
+		connect(ui.pushButton_drawPersonTrack, &QPushButton::clicked, this, &MainMenu::DrawAfterUserRecgedTrack);
 
 		UpdateExistedBuildingMapList();
 	}
@@ -953,8 +954,6 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 
 			//加载库图片
 			QString face_recg_path = QString(CAMERA_LIBRARY_IMAGE_NAME);
-			//face_recg_path.append(QString("/lib%1_%2.jpg").arg(face_info.recg_face_lib_id).arg(face_info.recg_face_id));
-			//face_recg_path.append(QString("/lib.jpg"));
 			FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
 			if (face_data)
 			{
@@ -1002,8 +1001,9 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 				{
 					//检测文件夹是否创建
 					QString path = recg_dir + QString('/') + QString::fromLocal8Bit(face_info.recg_people_name) + ".json";
-					QString context = QString("\"time_stamp\":") + QString("\"%1\",\n").arg(epoch_time);
-					context.append("\"camera_id\":");
+					QString context = QString("\"") + QString(BODY_RECG_TIME) + QString("\":\"%1\",\n\"").arg(epoch_time);
+					context.append(BODY_RECG_CAMID);
+					context.append("\":");
 					context.append(QString("%1").arg(face_result->channel_id));
 					p_menu->SaveSnapRecgInfo(path, context);
 
@@ -1807,6 +1807,18 @@ void MainMenu::UpdateConnectedCameraList()
 	}
 }
 
+void MainMenu::DrawAfterUserRecgedTrack()
+{
+	if (ui.lineEdit_searchPersonTrack->text().isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请输入要绘制轨迹的用户名！"));
+		return;
+	}
+
+	QString user_name = ui.lineEdit_searchPersonTrack->text();
+	DrawUserRunTrack(user_name);
+}
+
 //显示当前选中的相机ID
 void MainMenu::ShowCurrentSelectCameraId(const QString &cam_ip)
 {
@@ -1859,6 +1871,12 @@ void MainMenu::LoadExistedBuildingMap(const QString &select)
 	ui.label_buildingMap->DealSelectedBuildingMap(camera_info);
 }
 
+//绘制对应用户的抓拍轨迹
+void MainMenu::DrawUserRunTrack(const QString & user_name)
+{
+	ReadSnapRectJsonFile(user_name);
+}
+
 //读取抓拍识别的json文件，根据文件内容绘制轨迹图
 void MainMenu::ReadSnapRectJsonFile(const QString & user_name)
 {
@@ -1867,7 +1885,32 @@ void MainMenu::ReadSnapRectJsonFile(const QString & user_name)
 		return;
 	}
 
+	QString user_recg_dir = QString(CAMERA_RECG_IMAGE_PATH) + QString('/') + user_name + QString('/') + user_name;
+	user_recg_dir.append(".json");
+	QFile file(user_recg_dir);
+	int ret = file.open(QIODevice::ReadOnly | QIODevice::Text);
+	if (!ret)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("查找该用户抓拍记录失败！"));
+		return;
+	}
 
+	QByteArray sinfo = file.readAll();
+	if (sinfo.isEmpty())
+	{
+		file.close();
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("该用户抓拍记录为空！"));
+		return;
+	}
+	file.close();
+
+	QString snap_recg_info;
+	snap_recg_info.append(QString("{\"")+QString(BODY_RECG_INFO)+ QString("\":"));
+	snap_recg_info.append("[");
+	snap_recg_info.append(sinfo);
+	snap_recg_info.append("]}");
+
+	ui.label_buildingMap->SetDrawTrackData(BUILDING_SHOW_TRACK, snap_recg_info);
 }
 
 //更新已连接的相机map

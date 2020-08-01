@@ -57,6 +57,12 @@
 */
 
 
+#define   BODY_RECG_INFO       "recg_info"
+#define   BODY_RECG_CAMID      "camera_id"
+#define   BODY_RECG_CAMIP      "camera_ip"
+#define   BODY_RECG_TIME       "time_stamp"
+
+
 
 
 #endif

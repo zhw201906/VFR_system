@@ -46,6 +46,7 @@
 
 
 
+
 typedef struct {
 
 
@@ -124,8 +125,10 @@ public:
 	void UpdateExistedBuildingMapList();
 	void UpdateSavedPersonTrackList();
 	void UpdateConnectedCameraList();
+	void DrawAfterUserRecgedTrack();
 	void ShowCurrentSelectCameraId(const QString &cam_ip);
 	void LoadExistedBuildingMap(const QString &str);
+	void DrawUserRunTrack(const QString &user_name);
 	void ReadSnapRectJsonFile(const QString &user_name);
 
 	//相机管理

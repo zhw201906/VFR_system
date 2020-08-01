@@ -1,5 +1,15 @@
 #include "DealBuildingMap.h"
 
+long long StringToInt64(std::string &str)
+{
+	long long res = 0;
+	for (int i = 0; i < str.size(); i++)
+	{
+		res = (str[i] - '0') + res * 10;
+	}
+	return res;
+}
+
 DealBuildingMap::DealBuildingMap(QWidget *parent)
 	: QLabel(parent)
 {
@@ -8,6 +18,11 @@ DealBuildingMap::DealBuildingMap(QWidget *parent)
 	building_map_scaled_x = 1;
 	building_map_scaled_y = 1;
 	building_map_mode = BUILDING_SHOW_MAP;
+	n_ctrl_draw_track = 0;
+	p_ctrl_draw_track_timer = NULL;
+	p_ctrl_draw_track_timer = new QTimer(this);
+
+	connect(p_ctrl_draw_track_timer, &QTimer::timeout, this, &DealBuildingMap::DealRunTrackProcess);
 }
 
 DealBuildingMap::~DealBuildingMap()
@@ -73,6 +88,36 @@ void DealBuildingMap::CalcelOneRecodePoint()
 	update();
 }
 
+//获取抓拍识别的用户数据，解析后开始绘图
+void DealBuildingMap::SetDrawTrackData(MAP_MODE mode, const QString & data)
+{
+	if (data.isEmpty())
+	{
+		return;
+	}
+	building_map_mode = mode;
+	Json::Value snap_json;
+	if (String2Json(data.toStdString(), snap_json) == false)
+	{
+		emit SendShowErrorMsg(error_snap_recg_user_json);
+		return;
+	}
+
+	user_run_time_campos_map.clear();
+	int snap_size = snap_json[BODY_RECG_INFO].size();
+	for (int i = 0; i < snap_size; i++)
+	{
+		CameraPositionInfo cam_info;
+		cam_info.camera_id = snap_json[BODY_RECG_INFO][i][BODY_RECG_CAMID].asInt();		
+		std::string stime_stamp = snap_json[BODY_RECG_INFO][i][BODY_RECG_TIME].asString();
+		long long time_ = StringToInt64(stime_stamp);
+		QString  time_stamp = QDateTime::fromMSecsSinceEpoch(time_).toString("yyyy-MM-dd hh:mm:ss.zzz");
+		user_run_time_campos_map[time_stamp] = cam_info;
+	}
+	DrawTrackDataToCache();
+	CtrlDrawRunTrackProcess(1000);
+}
+
 //处理选中的建筑地图
 void DealBuildingMap::DealSelectedBuildingMap(QString & info)
 {
@@ -126,6 +171,84 @@ void DealBuildingMap::CleanSelectedBuildingMap()
 	update();
 }
 
+//控制绘制运行轨迹过程
+void DealBuildingMap::DealRunTrackProcess()
+{
+	n_ctrl_draw_track++;
+	update();
+}
+
+//设置绘制轨迹的坐标数据到Cache中，等待绘制
+void DealBuildingMap::DrawTrackDataToCache()
+{
+	auto it = user_run_time_campos_map.begin();
+	while (it != user_run_time_campos_map.end())
+	{
+		int idx = FindExistCameraInfo(it.value().camera_ip, it.value().camera_id);
+		if (idx == OPER_ERR)
+		{
+			qDebug() << "find camera_ip = " << it.value().camera_ip << "failed...";
+			++it;
+			continue;
+		}
+		it.value().position      = existed_camera_position[idx].position;
+		it.value().position_name = existed_camera_position[idx].position_name;
+		++it;
+	}
+
+	cache_draw_track_point.clear();
+	auto iter = user_run_time_campos_map.begin();
+	QPoint pbegin, pend;
+	pbegin = iter.value().position;
+	++iter;
+	while (iter != user_run_time_campos_map.end())
+	{
+		pend = iter.value().position;
+		if (pbegin != pend)
+		{
+			QPoint diff = (pend - pbegin) / POINT_DIV_NUMS;
+			for (int i = 0; i < POINT_DIV_NUMS; i++)
+			{
+				cache_draw_track_point.push_back(pbegin + diff * i);
+			}			
+		}
+		pbegin = pend;
+		++iter;
+	}
+}
+
+//通过相机IP或者ID查找已存在相机的信息
+int DealBuildingMap::FindExistCameraInfo(const QString & cam_ip, int cam_id)
+{
+	int size = existed_camera_position.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (cam_id == -1)  //通过ip查询相机
+		{
+			if (existed_camera_position[i].camera_ip.compare(cam_ip) == 0)
+			{
+				return i;
+			}
+		}
+		else               //通过id查询相机
+		{
+			if (existed_camera_position[i].camera_id == cam_id)
+			{
+				return i;
+			}
+		}
+	}
+	return OPER_ERR;
+}
+
+void DealBuildingMap::CtrlDrawRunTrackProcess(int time)
+{
+	if (p_ctrl_draw_track_timer->isActive() == false)
+	{
+		p_ctrl_draw_track_timer->start(time / POINT_DIV_NUMS);
+	}
+}
+
 //点击事件，设置相机放置位置
 void DealBuildingMap::mousePressEvent(QMouseEvent * ev)
 {
@@ -136,7 +259,6 @@ void DealBuildingMap::mousePressEvent(QMouseEvent * ev)
 
 	if (ev->button() == Qt::LeftButton)
 	{
-		//qDebug() << "-----------leftButton pressed" << "x:" << ev->x() << "y" << ev->y();
 		cur_camera_position.setX(ev->x()*building_map_scaled_x);
 		cur_camera_position.setY(ev->y()*building_map_scaled_y);
 		update();
@@ -178,7 +300,7 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 			}
 		}
 	}
-	else if (building_map_mode == BUILDING_SHOW_MAP)
+	else if (building_map_mode == BUILDING_SHOW_MAP || building_map_mode == BUILDING_SHOW_TRACK)
 	{
 		pen.setColor(QColor(0, 255, 0));
 		painter.setPen(pen);
@@ -190,6 +312,42 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 			painter.drawEllipse(cenx, ceny, CAMERA_SIZE_SCALED*width(), CAMERA_SIZE_SCALED*width());
 			painter.drawPoint(it->position.x() / building_map_scaled_x, it->position.y() / building_map_scaled_y);		
 			++it;
+		}
+
+		if (building_map_mode == BUILDING_SHOW_TRACK)
+		{
+			if (cache_draw_track_point.isEmpty())
+			{
+				return;
+			}
+
+			int i = 0;
+			QPainterPath path;
+			path.moveTo(cache_draw_track_point[i].x() / building_map_scaled_x, cache_draw_track_point[i].y() / building_map_scaled_y);
+			for (; i < n_ctrl_draw_track; i++)
+			{
+				path.lineTo(cache_draw_track_point[i].x() / building_map_scaled_x, cache_draw_track_point[i].y() / building_map_scaled_y);
+			}
+
+			if (n_ctrl_draw_track == cache_draw_track_point.size())
+			{
+				n_ctrl_draw_track = 0;
+				if (p_ctrl_draw_track_timer->isActive() == true)
+				{
+					p_ctrl_draw_track_timer->stop();
+				}
+			}
+			//auto it = user_run_time_campos_map.begin();
+			//path.moveTo(it.value().position.x() / building_map_scaled_x, it.value().position.y() / building_map_scaled_y);
+			//it++;
+			//while (it != user_run_time_campos_map.end())
+			//{
+			//	path.lineTo(it.value().position.x() / building_map_scaled_x, it.value().position.y() / building_map_scaled_y);
+			//	++it;
+			//}
+
+			painter.drawPath(path);   // 绘制前面创建的path
+
 		}
 
 	}

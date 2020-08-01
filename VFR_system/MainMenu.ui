@@ -117,7 +117,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget_systemMode">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="onlineMonitoring">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -1860,6 +1860,9 @@
                  <width>200</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="text">
+                <string>黄丽芳#14</string>
                </property>
               </widget>
              </item>
