@@ -197,6 +197,7 @@ void DealBuildingMap::DrawTrackDataToCache()
 	}
 
 	cache_draw_track_point.clear();
+	cache_draw_track_endpoint.clear();
 	auto iter = user_run_time_campos_map.begin();
 	QPoint pbegin, pend;
 	pbegin = iter.value().position;
@@ -210,7 +211,8 @@ void DealBuildingMap::DrawTrackDataToCache()
 			for (int i = 0; i < POINT_DIV_NUMS; i++)
 			{
 				cache_draw_track_point.push_back(pbegin + diff * i);
-			}			
+			}
+			cache_draw_track_endpoint.push_back(pbegin);
 		}
 		pbegin = pend;
 		++iter;
@@ -324,17 +326,24 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 			int i = 0;
 			QPainterPath path;
 			path.moveTo(cache_draw_track_point[i].x() / building_map_scaled_x, cache_draw_track_point[i].y() / building_map_scaled_y);
-			for (; i < n_ctrl_draw_track; i++)
+			if (n_ctrl_draw_track < cache_draw_track_point.size())
 			{
-				path.lineTo(cache_draw_track_point[i].x() / building_map_scaled_x, cache_draw_track_point[i].y() / building_map_scaled_y);
+				for (; i < n_ctrl_draw_track; i++)
+				{
+					path.lineTo(cache_draw_track_point[i].x() / building_map_scaled_x, cache_draw_track_point[i].y() / building_map_scaled_y);
+				}
 			}
-
 			if (n_ctrl_draw_track == cache_draw_track_point.size())
 			{
-				n_ctrl_draw_track = 0;
+				//n_ctrl_draw_track = 0;
 				if (p_ctrl_draw_track_timer->isActive() == true)
 				{
 					p_ctrl_draw_track_timer->stop();
+				}
+
+				for (int j = 1; j < cache_draw_track_endpoint.size(); j++)
+				{
+					path.lineTo(cache_draw_track_endpoint[j].x() / building_map_scaled_x, cache_draw_track_endpoint[j].y() / building_map_scaled_y);
 				}
 			}
 			//auto it = user_run_time_campos_map.begin();

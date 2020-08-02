@@ -96,5 +96,6 @@ private:
 	QVector<CameraPositionInfo>  existed_camera_position;
 	QMap<QString, CameraPositionInfo>  user_run_time_campos_map;
 	QVector<QPoint>  cache_draw_track_point;
+	QList<QPoint>    cache_draw_track_endpoint;
 	QTimer  *p_ctrl_draw_track_timer;
 };
