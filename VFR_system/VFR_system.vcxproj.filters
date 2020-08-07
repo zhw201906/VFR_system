@@ -85,6 +85,15 @@
     <ClCompile Include="FileOperator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShowUserListTrack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShowSnapRecgImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShowWarningUserList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VFR_system.h">
@@ -132,6 +141,15 @@
     <QtMoc Include="FaceLibInfoOperator.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ShowUserListTrack.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ShowSnapRecgImage.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ShowWarningUserList.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="VFR_system.ui">
@@ -162,6 +180,15 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="FaceLibInfoOperator.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ShowUserListTrack.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ShowSnapRecgImage.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ShowWarningUserList.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

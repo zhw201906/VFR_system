@@ -19,6 +19,13 @@ typedef struct {
     VZ_BOX_CAM_INFO camera_item;
 }CameraAttribute;
 
+typedef struct CameraPositionInfo_ {
+	int     camera_id;
+	QString camera_ip;
+	QString position_name;
+	QPoint  position;
+}CameraPositionInfo;
+
 typedef struct {
 	int threshold_value;
 	int id;

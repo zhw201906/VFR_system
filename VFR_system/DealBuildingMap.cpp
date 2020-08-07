@@ -21,6 +21,8 @@ DealBuildingMap::DealBuildingMap(QWidget *parent)
 	n_ctrl_draw_track = 0;
 	p_ctrl_draw_track_timer = NULL;
 	p_ctrl_draw_track_timer = new QTimer(this);
+	p_list_track = NULL;
+	high_light_flag = false;
 
 	connect(p_ctrl_draw_track_timer, &QTimer::timeout, this, &DealBuildingMap::DealRunTrackProcess);
 }
@@ -89,7 +91,7 @@ void DealBuildingMap::CalcelOneRecodePoint()
 }
 
 //获取抓拍识别的用户数据，解析后开始绘图
-void DealBuildingMap::SetDrawTrackData(MAP_MODE mode, const QString & data)
+void DealBuildingMap::SetDrawTrackData(MAP_MODE mode, const QString & data, qint64 start_time, qint64 end_time)
 {
 	if (data.isEmpty())
 	{
@@ -104,16 +106,42 @@ void DealBuildingMap::SetDrawTrackData(MAP_MODE mode, const QString & data)
 	}
 
 	user_run_time_campos_map.clear();
+	draw_user_name = QString(snap_json[BODY_RECG_NAME].asString().c_str());
 	int snap_size = snap_json[BODY_RECG_INFO].size();
-	for (int i = 0; i < snap_size; i++)
+	if (start_time <= 0 && end_time <= 0)
 	{
-		CameraPositionInfo cam_info;
-		cam_info.camera_id = snap_json[BODY_RECG_INFO][i][BODY_RECG_CAMID].asInt();		
-		std::string stime_stamp = snap_json[BODY_RECG_INFO][i][BODY_RECG_TIME].asString();
-		long long time_ = StringToInt64(stime_stamp);
-		QString  time_stamp = QDateTime::fromMSecsSinceEpoch(time_).toString("yyyy-MM-dd hh:mm:ss.zzz");
-		user_run_time_campos_map[time_stamp] = cam_info;
+		for (int i = 0; i < snap_size; i++)
+		{
+			CameraPositionInfo cam_info;
+			cam_info.camera_id = snap_json[BODY_RECG_INFO][i][BODY_RECG_CAMID].asInt();
+			std::string stime_stamp = snap_json[BODY_RECG_INFO][i][BODY_RECG_TIME].asString();
+			long long time_ = StringToInt64(stime_stamp);
+			QString  time_stamp = QDateTime::fromMSecsSinceEpoch(time_).toString("yyyy-MM-dd hh:mm:ss.zzz");
+			user_run_time_campos_map[time_stamp] = cam_info;
+		}
 	}
+	else
+	{
+		for (int i = 0; i < snap_size; i++)
+		{
+			CameraPositionInfo cam_info;
+			cam_info.camera_id = snap_json[BODY_RECG_INFO][i][BODY_RECG_CAMID].asInt();
+			std::string stime_stamp = snap_json[BODY_RECG_INFO][i][BODY_RECG_TIME].asString();
+			long long time_ = StringToInt64(stime_stamp);
+			if (time_ >= start_time && time_ <= end_time)
+			{
+				QString  time_stamp = QDateTime::fromMSecsSinceEpoch(time_).toString("yyyy-MM-dd hh:mm:ss.zzz");
+				user_run_time_campos_map[time_stamp] = cam_info;
+			}
+		}
+	}
+
+	if (user_run_time_campos_map.isEmpty())  //用户轨迹为空
+	{
+		emit SendShowErrorMsg(error_snap_recg_user_null);
+		return;
+	}
+
 	DrawTrackDataToCache();
 	CtrlDrawRunTrackProcess(1000);
 }
@@ -161,6 +189,7 @@ void DealBuildingMap::CleanPlaceingNewBuinldingMap()
 {
 	record_camera_position.clear();
 	cur_camera_position = QPoint(0, 0);
+	existed_camera_position.clear();
 	update();
 }
 
@@ -175,6 +204,49 @@ void DealBuildingMap::CleanSelectedBuildingMap()
 void DealBuildingMap::DealRunTrackProcess()
 {
 	n_ctrl_draw_track++;
+	update();
+}
+
+//显示链式轨迹窗口
+void DealBuildingMap::ShowListTrackWindow()
+{
+	if (user_run_time_campos_map.isEmpty())
+	{
+		emit SendShowErrorMsg(error_snap_recg_track_null);
+		return;
+	}
+
+	if (p_list_track == NULL)
+	{
+		QString dir = QString(CAMERA_RECG_IMAGE_PATH) + QString('/') + draw_user_name;
+		p_list_track = new ShowUserListTrack(user_run_time_campos_map, dir);
+
+		connect(p_list_track, &ShowUserListTrack::CurrentClickedLinkTrack, this, &DealBuildingMap::DealSelectedTrack);
+		connect(p_list_track, &ShowUserListTrack::CloseSignals, [=]() {
+			delete p_list_track;
+			p_list_track = NULL;
+			high_light_flag = false;
+			update();
+		});
+	}
+
+	emit AdjustLinkTrackPosition();
+}
+
+//调整链式轨迹图界面的位置
+void DealBuildingMap::MoveListTrackWindow(int x, int y, int w, int h)
+{
+	p_list_track->setFixedSize(w, h);
+	p_list_track->move(x, y);
+	p_list_track->show();
+}
+
+//处理高亮显示的路径
+void DealBuildingMap::DealSelectedTrack(QPoint start, QPoint end)
+{
+	high_light_line.setPoints(start, end);
+	high_light_flag = true;
+	//building_map_mode = BUILDING_SHOW_HIGHLIGHT_TRACK;
 	update();
 }
 
@@ -201,6 +273,7 @@ void DealBuildingMap::DrawTrackDataToCache()
 	auto iter = user_run_time_campos_map.begin();
 	QPoint pbegin, pend;
 	pbegin = iter.value().position;
+	cache_draw_track_endpoint.push_back(pbegin);
 	++iter;
 	while (iter != user_run_time_campos_map.end())
 	{
@@ -212,11 +285,12 @@ void DealBuildingMap::DrawTrackDataToCache()
 			{
 				cache_draw_track_point.push_back(pbegin + diff * i);
 			}
-			cache_draw_track_endpoint.push_back(pbegin);
+			cache_draw_track_endpoint.push_back(pend);
 		}
 		pbegin = pend;
 		++iter;
 	}
+	//PrintEndpoint();
 }
 
 //通过相机IP或者ID查找已存在相机的信息
@@ -225,7 +299,7 @@ int DealBuildingMap::FindExistCameraInfo(const QString & cam_ip, int cam_id)
 	int size = existed_camera_position.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (cam_id == -1)  //通过ip查询相机
+		if (cam_id <= 0 )  //通过ip查询相机
 		{
 			if (existed_camera_position[i].camera_ip.compare(cam_ip) == 0)
 			{
@@ -243,12 +317,45 @@ int DealBuildingMap::FindExistCameraInfo(const QString & cam_ip, int cam_id)
 	return OPER_ERR;
 }
 
+void DealBuildingMap::PrintEndpoint()
+{
+	qDebug() << "begin print";
+	auto it = cache_draw_track_endpoint.begin();
+	while (it != cache_draw_track_endpoint.end())
+	{
+		qDebug() << "x:" << it->x() << "  y:" << it->y();
+		++it;
+	}
+	qDebug() << "end print" << endl;
+}
+
+//启动绘制轨迹定时器
 void DealBuildingMap::CtrlDrawRunTrackProcess(int time)
 {
+	n_ctrl_draw_track = 0;  //从头开始绘制
 	if (p_ctrl_draw_track_timer->isActive() == false)
 	{
 		p_ctrl_draw_track_timer->start(time / POINT_DIV_NUMS);
 	}
+}
+
+//清除已绘制的轨迹图
+void DealBuildingMap::CleanDrawedRunTrack()
+{
+	building_map_mode = BUILDING_SHOW_MAP;
+	cache_draw_track_point.clear();
+	cache_draw_track_endpoint.clear();
+	user_run_time_campos_map.clear();
+	update();
+	if (p_list_track != NULL)
+	{
+		p_list_track->close();
+		delete p_list_track;
+		p_list_track = NULL;
+		high_light_flag = false;
+	}
+	update();
+
 }
 
 //点击事件，设置相机放置位置
@@ -302,20 +409,26 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 			}
 		}
 	}
-	else if (building_map_mode == BUILDING_SHOW_MAP || building_map_mode == BUILDING_SHOW_TRACK)
+	else if (building_map_mode == BUILDING_SHOW_MAP || building_map_mode == BUILDING_SHOW_TRACK || building_map_mode == BUILDING_SHOW_HIGHLIGHT_TRACK)
 	{
 		pen.setColor(QColor(0, 255, 0));
 		painter.setPen(pen);
+		QFont font;
+		font.setFamily("Microsoft YaHei");
+		font.setPointSize(16);
+		painter.setFont(font);
 		auto it = existed_camera_position.begin();
 		while (it != existed_camera_position.end())
 		{
 			int cenx = (it->position.x() / building_map_scaled_x - 0.5*CAMERA_SIZE_SCALED * width()) > 0 ? (it->position.x() / building_map_scaled_x - 0.5*CAMERA_SIZE_SCALED * width()) : 0;
 			int ceny = (it->position.y() / building_map_scaled_y - 0.5*CAMERA_SIZE_SCALED * width()) > 0 ? (it->position.y() / building_map_scaled_y - 0.5*CAMERA_SIZE_SCALED * width()) : 0;
 			painter.drawEllipse(cenx, ceny, CAMERA_SIZE_SCALED*width(), CAMERA_SIZE_SCALED*width());
-			painter.drawPoint(it->position.x() / building_map_scaled_x, it->position.y() / building_map_scaled_y);		
+			painter.drawPoint(it->position.x() / building_map_scaled_x, it->position.y() / building_map_scaled_y);
+			painter.drawText(cenx + CAMERA_SIZE_SCALED * width() + 5, ceny + CAMERA_SIZE_SCALED * width(), it->position_name);
 			++it;
 		}
 
+		//绘制轨迹全过程图
 		if (building_map_mode == BUILDING_SHOW_TRACK)
 		{
 			if (cache_draw_track_point.isEmpty())
@@ -335,7 +448,6 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 			}
 			if (n_ctrl_draw_track == cache_draw_track_point.size())
 			{
-				//n_ctrl_draw_track = 0;
 				if (p_ctrl_draw_track_timer->isActive() == true)
 				{
 					p_ctrl_draw_track_timer->stop();
@@ -346,17 +458,46 @@ void DealBuildingMap::paintEvent(QPaintEvent * e)
 					path.lineTo(cache_draw_track_endpoint[j].x() / building_map_scaled_x, cache_draw_track_endpoint[j].y() / building_map_scaled_y);
 				}
 			}
-			//auto it = user_run_time_campos_map.begin();
-			//path.moveTo(it.value().position.x() / building_map_scaled_x, it.value().position.y() / building_map_scaled_y);
-			//it++;
-			//while (it != user_run_time_campos_map.end())
-			//{
-			//	path.lineTo(it.value().position.x() / building_map_scaled_x, it.value().position.y() / building_map_scaled_y);
-			//	++it;
-			//}
 
 			painter.drawPath(path);   // 绘制前面创建的path
 
+		}
+
+		//高亮显示某一段路径
+		if (high_light_flag)
+		{
+			pen.setColor(QColor(255, 0, 0));
+			pen.setWidth(5);
+			painter.setPen(pen);
+			QLine line(high_light_line.x1() / building_map_scaled_x, high_light_line.y1() / building_map_scaled_y,
+				       high_light_line.x2() / building_map_scaled_x, high_light_line.y2() / building_map_scaled_y);
+			painter.drawLine(line);
+
+			const int array_size = 30;
+			QLineF fline(line);
+			QLineF dline = fline.unitVector();
+			dline.setLength(array_size);
+			
+			QPoint pb = line.p1();
+			QPoint pe = line.p2();
+			QPointF pm = (pe - pb) / 2.0;
+
+			dline.translate(pm);
+			QLineF vline = dline.normalVector();
+			vline.setLength(array_size*0.4);
+
+			QLineF vline2 = vline.normalVector().normalVector();
+
+			QPointF pt[3];
+			pt[0] = dline.p2();
+			pt[1] = vline.p2();
+			pt[2] = vline2.p2();
+
+			QBrush brush;
+			brush.setColor(QColor(255, 0, 0));
+			brush.setStyle(Qt::SolidPattern);
+			painter.setBrush(brush);
+			painter.drawPolygon(pt, 3);
 		}
 
 	}

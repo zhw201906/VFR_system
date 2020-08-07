@@ -1,0 +1,63 @@
+{"camera_info":[{
+  "camera_id":3,
+  "camera_ip":"192.168.66.10",
+  "position_name":"驱动部",
+  "camera_position_x":786,
+  "camera_position_y":409
+}
+,{
+  "camera_id":13,
+  "camera_ip":"192.168.66.8",
+  "position_name":"测试部",
+  "camera_position_x":731,
+  "camera_position_y":506
+}
+,{
+  "camera_id":10,
+  "camera_ip":"192.168.66.4",
+  "position_name":"销售走廊",
+  "camera_position_x":958,
+  "camera_position_y":457
+}
+,{
+  "camera_id":11,
+  "camera_ip":"192.168.66.5",
+  "position_name":"休息区",
+  "camera_position_x":1158,
+  "camera_position_y":288
+}
+,{
+  "camera_id":1,
+  "camera_ip":"192.168.109.106",
+  "position_name":"算法走廊",
+  "camera_position_x":3030,
+  "camera_position_y":457
+}
+,{
+  "camera_id":4,
+  "camera_ip":"192.168.66.11",
+  "position_name":"平台部",
+  "camera_position_x":114,
+  "camera_position_y":457
+}
+,{
+  "camera_id":5,
+  "camera_ip":"192.168.66.13",
+  "position_name":"安防线",
+  "camera_position_x":133,
+  "camera_position_y":547
+}
+,{
+  "camera_id":2,
+  "camera_ip":"192.168.116.156",
+  "position_name":"公司大厅",
+  "camera_position_x":1599,
+  "camera_position_y":591
+}
+,{
+  "camera_id":8,
+  "camera_ip":"192.168.66.2",
+  "position_name":"闸机口",
+  "camera_position_x":1832,
+  "camera_position_y":456
+}],"camera_name":"臻识科技研发部","camera_num":9}

@@ -20,9 +20,10 @@
 #include "DisplaySnapRecognizeResult.h"
 #include "FaceLibInfoOperator.h"
 #include "FileOperator.h"
+#include "ShowWarningUserList.h"
 #include <string>
 
-#define  CAMERA_NUM_LIMIT      16
+#define  CAMERA_NUM_LIMIT      9
 #define  FRAME_NUM_SIZE_LIMIT  3
 
 #define  PAGE_USER_NUM_BACE    25
@@ -81,6 +82,10 @@ public:
 	void ShowOneChnVideo(int chnId);
 	void ChangeOneVideoStyle(int chnId);
 	void SaveSnapRecgInfo(QString &path, QString &info);
+	void QueryCameraInfoByChanid(int channel_id, int &cam_id, QString &cam_ip);
+	void WarningRecordUsername(QString &name);
+	void DealShowWarningUserList();
+	void TurnToTrackPathUi(QString user_name);
 
 	static void VideoFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
 	static void CameraFrameCallBack(VzLPRClientHandle handle, void *pUserData, const VzYUV420P *pFrame);
@@ -110,12 +115,14 @@ public:
     void ModifyOneFaceLibInfo();
     void DealModifyOneFaceLib(FaceLibInfo &face_info);
     void DeleteOneFaceLib();
+	int  QueryFaceLibTypeById(int db_id);
     //void DealOperatorFaceLibInfo();
 
 	//行人轨迹
 	void LoadBuildingMapImage();
 	void RefreshBuildMapDisplay();
 	void DealPlaceCameraPosition(QPoint pt);
+	void DealPlaceOneCamera();
 	void RefreshShowPlaceCameraInfo();
 	void CalcelPlacedOneCamera();
 	void ResetCreateNewBuildingMap();
@@ -130,6 +137,9 @@ public:
 	void LoadExistedBuildingMap(const QString &str);
 	void DrawUserRunTrack(const QString &user_name);
 	void ReadSnapRectJsonFile(const QString &user_name);
+	void DealDrawUserRunTrackTimeMode(int status);
+	void DealShowErrorMsg(int msg_idx);
+	void DealAdjustLinkTrackPosition();
 
 	//相机管理
 	void UpdateConnectedCameraInfoMap();
@@ -243,6 +253,9 @@ private:
     cv::Mat recognizeImage;
     DisplayRecognizeResult  *p_display_recognize_ui;
     DisplayDetectResult     *p_display_detect_ui;
+
+	QVector<QString>  warning_user_list;
+	ShowWarningUserList *p_display_warning_list_ui;
 };
 
 

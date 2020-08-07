@@ -15,6 +15,10 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QDebug>
+#include <QCheckBox>
+#include <QFont>
+#include <QPushButton>
+#include <QSet>
 
 #define  OPEN_IMAGE_DIR          "d:/vz_box"
 //#define  OPEN_IMAGE_DIR          "d:/test_image"
@@ -57,6 +61,7 @@
 */
 
 
+#define   BODY_RECG_NAME       "recg_name"
 #define   BODY_RECG_INFO       "recg_info"
 #define   BODY_RECG_CAMID      "camera_id"
 #define   BODY_RECG_CAMIP      "camera_ip"

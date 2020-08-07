@@ -238,6 +238,15 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(0, 255, 0);</string>
+        </property>
         <property name="text">
          <string>相似度：</string>
         </property>
@@ -262,6 +271,15 @@
           <width>40</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(0, 255, 0);</string>
         </property>
         <property name="text">
          <string/>

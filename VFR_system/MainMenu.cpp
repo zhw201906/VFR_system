@@ -154,10 +154,15 @@ MainMenu::MainMenu(QWidget *parent)
 		video_display_label = NULL;
 		p_snap_result_buff_ui = NULL;
 		p_snap_result_item = NULL;
+		p_display_warning_list_ui = NULL;
 
 		ui.toolButton_oneWindow->setEnabled(true);
 		ui.toolButton_fourWindows->setEnabled(false);
 		ui.toolButton_nineWindows->setEnabled(true);
+
+		ui.toolButton_devStatus->setEnabled(false);
+		ui.toolButton_devStatus->setIcon(QIcon("./icon/devOffline.jpg"));
+		ui.toolButton_devStatus->setText(QString::fromLocal8Bit("设备离线"));
 
 		ui.listWidget_nowSnap->setViewMode(QListView::IconMode);
 		ui.listWidget_nowSnap->setResizeMode(QListWidget::Adjust);
@@ -230,6 +235,9 @@ MainMenu::MainMenu(QWidget *parent)
 		connect(&video_show_timer_, &QTimer::timeout, this, &MainMenu::DealPlayVideoTimer);
 
 		connect(this, &MainMenu::ShowSnapItem, this, &MainMenu::DisplaySnapInformation);
+
+		//处理报警跳转画轨迹
+		connect(ui.toolButton_warningInfo, &QToolButton::clicked, this, &MainMenu::DealShowWarningUserList);
 	}
     
 /**************************************************相机配置界面********************************************************/
@@ -305,20 +313,31 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.lineEdit_cameraPositionName->setPlaceholderText(QString::fromLocal8Bit("为相机安装位置设置名称，非必须"));
 		ui.lineEdit_searchPersonTrack->setPlaceholderText(QString::fromLocal8Bit("必须是已存在用户，才可绘制轨迹"));
 		ui.lineEdit_buildingMapName->setPlaceholderText(QString::fromLocal8Bit("新建地图名称，不可重复"));
+		ui.checkBox_openRunTrackAllTimes->setCheckState(Qt::Checked);
+		ui.dateTimeEdit_runTrackStartTime->setEnabled(false);
+		ui.dateTimeEdit_runTrackEndTime->setEnabled(false);
+		QDateTime date_time = QDateTime::currentDateTime();
+		ui.dateTimeEdit_runTrackEndTime->setDateTime(date_time);
+		ui.dateTimeEdit_runTrackStartTime->setDateTime(date_time.addDays(-1));
+
 
 		place_camera_num = 0;
 		connect(ui.pushButton_loadBuildingImage, &QPushButton::clicked, this, &MainMenu::LoadBuildingMapImage);
-		connect(ui.pushButton_placeCamera, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::RecodeCurrentCameraPoint);
+		connect(ui.pushButton_cleanDrawedTrack, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::CleanDrawedRunTrack);
+		connect(ui.pushButton_placeCamera, &QPushButton::clicked, this, &MainMenu::DealPlaceOneCamera);
 		connect(ui.pushButton_cacelPlaceCamera, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::CalcelOneRecodePoint);
 		connect(ui.label_buildingMap, &DealBuildingMap::CalcelOnePlacedCamera,   this, &MainMenu::CalcelPlacedOneCamera);
 		connect(ui.label_buildingMap, &DealBuildingMap::CurrentPlaceCameraPoint, this, &MainMenu::DealPlaceCameraPosition);
+		connect(ui.label_buildingMap, &DealBuildingMap::SendShowErrorMsg, this, &MainMenu::DealShowErrorMsg);
+		connect(ui.label_buildingMap, &DealBuildingMap::AdjustLinkTrackPosition, this, &MainMenu::DealAdjustLinkTrackPosition);
 		connect(ui.pushButton_saveBuildingMap, &QPushButton::clicked, this, &MainMenu::SaveNewBuildingMap);
 		connect(ui.pushButton_deleteExistBuildingMap, &QPushButton::clicked, this, &MainMenu::DeleteExistedBuildingMap);
 		connect(ui.comboBox_existedBuindingMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged), this, &MainMenu::LoadExistedBuildingMap);
 		connect(ui.pushButton_resetCameraPlace, &QPushButton::clicked, this, &MainMenu::ResetCreateNewBuildingMap);
 		connect(ui.comboBox_selectCamera, &QComboBox::currentTextChanged, this, &MainMenu::ShowCurrentSelectCameraId);
 		connect(ui.pushButton_drawPersonTrack, &QPushButton::clicked, this, &MainMenu::DrawAfterUserRecgedTrack);
-
+		connect(ui.checkBox_openRunTrackAllTimes, &QCheckBox::stateChanged, this, &MainMenu::DealDrawUserRunTrackTimeMode);
+		connect(ui.pushButton_referPersonLinkTrack, &QPushButton::clicked, ui.label_buildingMap, &DealBuildingMap::ShowListTrackWindow);		
 		UpdateExistedBuildingMapList();
 	}
 
@@ -463,6 +482,10 @@ void MainMenu::DealOpenVzbox()
 	ui.lineEdit_password->setEnabled(false);
 	ui.lineEdit_userName->setEnabled(false);
 
+	ui.toolButton_devStatus->setEnabled(true);
+	ui.toolButton_devStatus->setIcon(QIcon("./icon/devOnline.jpg"));
+	ui.toolButton_devStatus->setText(QString::fromLocal8Bit("设备在线"));
+
 	SystemAllInit();
 }
 
@@ -490,6 +513,10 @@ void MainMenu::DealCloseVzbox()
 	camera_list_buff.clear();
 	CloseAllVideoDisplay();
 	ClearVideoFrameCache();
+
+	ui.toolButton_devStatus->setEnabled(false);
+	ui.toolButton_devStatus->setIcon(QIcon("./icon/devOffline.jpg"));
+	ui.toolButton_devStatus->setText(QString::fromLocal8Bit("设备离线"));
 }
 
 //系统全部功能初始化，在成功连接设备后执行
@@ -738,6 +765,65 @@ void MainMenu::SaveSnapRecgInfo(QString &path, QString & info)
 
 	file.write(write_context.toUtf8());
 	file.close();
+}
+
+//通过通道号查询相机信息
+void MainMenu::QueryCameraInfoByChanid(int channel_id, int & cam_id, QString & cam_ip)
+{
+	auto it = connected_camera_map.begin();
+	while (it != connected_camera_map.end())
+	{
+		if (it.value().channel_id == channel_id)
+		{
+			cam_id = it.value().camera_id;
+			cam_ip = QString(it.value().camera_item.ip);
+			break;
+		}
+		++it;
+	}
+}
+
+//黑名单报警，记录用户名，并激活跳转功能
+void MainMenu::WarningRecordUsername(QString &name)
+{
+	warning_user_list.push_back(name);
+	ui.toolButton_warningInfo->setIcon(QIcon("./icon/warnning.jpg"));
+	QString warn_info = QString::fromLocal8Bit("报警:\"") + name 
+		+ QString::fromLocal8Bit("\"出现!");
+	ui.toolButton_warningInfo->setText(warn_info);
+}
+
+//处理点击报警按钮，显示报警用户列表
+void MainMenu::DealShowWarningUserList()
+{
+	if (p_display_warning_list_ui == NULL)
+	{
+		p_display_warning_list_ui = new ShowWarningUserList;
+		connect(p_display_warning_list_ui, &ShowWarningUserList::SignalWarningUser, this, &MainMenu::TurnToTrackPathUi);
+		connect(p_display_warning_list_ui, &ShowWarningUserList::SignalRefreshList, [=]() {
+			p_display_warning_list_ui->SetUserList(warning_user_list);
+			p_display_warning_list_ui->ShowUserList();
+		});
+	}
+	p_display_warning_list_ui->move(this->x() + this->width(), this->y());
+	p_display_warning_list_ui->resize(300, this->height());
+	p_display_warning_list_ui->show();
+	
+	p_display_warning_list_ui->SetUserList(warning_user_list);
+	p_display_warning_list_ui->ShowUserList();
+}
+
+//跳转到行人轨迹界面，并直接准备对应用户轨迹
+void MainMenu::TurnToTrackPathUi(QString user_name)
+{
+	ChangeSystemMode(4);
+
+	CleanAllSetSystemModeButton();
+	ui.pushButton_trackPath->setStyleSheet(SYSTEM_MODE_BUTTON_DISABLE_STYLE);
+	ui.pushButton_trackPath->setEnabled(false);
+
+	ui.lineEdit_searchPersonTrack->clear();
+	ui.lineEdit_searchPersonTrack->setText(user_name);
 }
 
 //相机视频回调缓存（通过定时器中断回调显示，效果相对较流畅）
@@ -1004,11 +1090,17 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 					QString context = QString("\"") + QString(BODY_RECG_TIME) + QString("\":\"%1\",\n\"").arg(epoch_time);
 					context.append(BODY_RECG_CAMID);
 					context.append("\":");
-					context.append(QString("%1").arg(face_result->channel_id));
+					int camera_id = 0;
+					QString camera_ip;
+					p_menu->QueryCameraInfoByChanid(face_result->channel_id, camera_id, camera_ip);
+					context.append(QString("%1,\n\"").arg(camera_id));
+					context.append(QString(BODY_RECG_CAMIP) + QString("\":\""));
+					context.append(camera_ip + QString("\""));
+
 					p_menu->SaveSnapRecgInfo(path, context);
 
 					//存储抓拍大图
-					QString big_path = recg_dir + QString("/big_%1.jpg").arg(epoch_time);
+					QString big_path = recg_dir + QString("/%1_big.jpg").arg(epoch_time);
 					QFile big_snap_file(big_face_snap_path);
 					big_snap_file.copy(big_path);
 
@@ -1017,6 +1109,14 @@ void MainMenu::CameraRecognizeCallBack(VzLPRClientHandle handle, TH_FaceResultEx
 					QFile snap_file(face_snap_path);
 					snap_file.copy(copy_path);
 				}
+			}
+
+			//查看识别到的人员所对应库的类型
+			int db_type = p_menu->QueryFaceLibTypeById(face_result->face_items[i].recg_face_lib_id);
+			if (db_type == 2)   //黑名单用户
+			{
+				QString name_ = QString::fromLocal8Bit(face_info.recg_people_name);
+				p_menu->WarningRecordUsername(name_);
 			}
 #endif
 		}
@@ -1555,15 +1655,30 @@ void MainMenu::DeleteOneFaceLib()
 
 }
 
+//通过库id查找对应库类型
+int MainMenu::QueryFaceLibTypeById(int db_id)
+{
+	auto it = face_lib_info_map.begin();
+	while (it != face_lib_info_map.end())
+	{
+		if (db_id == it.value().id)
+		{
+			return it.value().lib_type;
+		}
+		++it;
+	}
+	return -1;
+}
+
 //载入建筑平面图照片
 void MainMenu::LoadBuildingMapImage()
-{
-	ResetCreateNewBuildingMap();
+{	
 	QString img_path = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), OPEN_IMAGE_DIR,
 		tr("Images (*.png *.jpg);; All files (*.*)"));
 	
 	if (!img_path.isEmpty())
 	{
+		ResetCreateNewBuildingMap();
 		ui.label_buildingMap->CleanSelectedBuildingMap();
 		ui.comboBox_existedBuindingMap->setCurrentIndex(0);
 
@@ -1606,12 +1721,6 @@ void MainMenu::DealPlaceCameraPosition(QPoint pt)
 		return;
 	}
 
-	if (ui.comboBox_selectCamera->currentText().isEmpty())
-	{
-		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择相机后再放置相机！"));
-		return;
-	}
-
 	QString camera_ip = ui.comboBox_selectCamera->currentText();
 	QString camera_place_name = ui.lineEdit_cameraPositionName->text();
 
@@ -1620,11 +1729,11 @@ void MainMenu::DealPlaceCameraPosition(QPoint pt)
 
 	if (place_camera_num <= 1)
 	{
-		cur_camera_place_info.append(QString("{\n  \"camera_id\":%1,\n").arg(place_camera_num));
+		cur_camera_place_info.append(QString("{\n  \"camera_id\":%1,\n").arg(connected_camera_map[camera_ip].camera_id));
 	}
 	else
 	{
-		cur_camera_place_info.append(QString(",{\n  \"camera_id\":%1,\n").arg(place_camera_num));
+		cur_camera_place_info.append(QString(",{\n  \"camera_id\":%1,\n").arg(connected_camera_map[camera_ip].camera_id));
 	}
 
 	cur_camera_place_info.append(QString("  \"camera_ip\":\"%1\",\n").arg(camera_ip));
@@ -1635,6 +1744,17 @@ void MainMenu::DealPlaceCameraPosition(QPoint pt)
 	ui.textEdit_cameraPlaceInfo->append(cur_camera_place_info);
 	place_camera_info_buff.push_back(cur_camera_place_info);
 	ui.lineEdit_cameraPositionName->clear();
+}
+
+//放置一个相机
+void MainMenu::DealPlaceOneCamera()
+{
+	if (ui.comboBox_selectCamera->currentText().isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择相机后再放置相机！"));
+		return;
+	}
+	ui.label_buildingMap->RecodeCurrentCameraPoint();
 }
 
 //刷新显示放置相机位置的信息
@@ -1764,6 +1884,7 @@ void MainMenu::DeleteExistedBuildingMap()
 	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("删除地图 %1 成功！").arg(cur_map));
 	UpdateExistedBuildingMapList();
 	ui.label_buildingMap->clear();
+	ui.label_buildingMap->CleanPlaceingNewBuinldingMap();
 }
 
 //更新已有的地图列表
@@ -1807,11 +1928,17 @@ void MainMenu::UpdateConnectedCameraList()
 	}
 }
 
+//处理绘制行人轨迹按钮
 void MainMenu::DrawAfterUserRecgedTrack()
 {
 	if (ui.lineEdit_searchPersonTrack->text().isEmpty())
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请输入要绘制轨迹的用户名！"));
+		return;
+	}
+	if (ui.comboBox_existedBuindingMap->currentIndex()==0)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("请选择地图后再绘制轨迹！"));
 		return;
 	}
 
@@ -1874,17 +2001,17 @@ void MainMenu::LoadExistedBuildingMap(const QString &select)
 //绘制对应用户的抓拍轨迹
 void MainMenu::DrawUserRunTrack(const QString & user_name)
 {
+	if (user_name.isEmpty())
+	{
+		return;
+	}
+
 	ReadSnapRectJsonFile(user_name);
 }
 
 //读取抓拍识别的json文件，根据文件内容绘制轨迹图
 void MainMenu::ReadSnapRectJsonFile(const QString & user_name)
 {
-	if (user_name.isEmpty())
-	{
-		return;
-	}
-
 	QString user_recg_dir = QString(CAMERA_RECG_IMAGE_PATH) + QString('/') + user_name + QString('/') + user_name;
 	user_recg_dir.append(".json");
 	QFile file(user_recg_dir);
@@ -1905,12 +2032,86 @@ void MainMenu::ReadSnapRectJsonFile(const QString & user_name)
 	file.close();
 
 	QString snap_recg_info;
-	snap_recg_info.append(QString("{\"")+QString(BODY_RECG_INFO)+ QString("\":"));
+
+	snap_recg_info.append(QString("{\"")+QString(BODY_RECG_NAME)+ QString("\":"));
+	snap_recg_info.append(QString("\"")+user_name+ QString("\","));
+
+	snap_recg_info.append(QString("\"")+QString(BODY_RECG_INFO)+ QString("\":"));
 	snap_recg_info.append("[");
 	snap_recg_info.append(sinfo);
 	snap_recg_info.append("]}");
 
-	ui.label_buildingMap->SetDrawTrackData(BUILDING_SHOW_TRACK, snap_recg_info);
+	if (ui.checkBox_openRunTrackAllTimes->isChecked())
+	{
+		ui.label_buildingMap->SetDrawTrackData(BUILDING_SHOW_TRACK, snap_recg_info);
+	}
+	else
+	{
+		qint64 time_start = ui.dateTimeEdit_runTrackStartTime->dateTime().toMSecsSinceEpoch();
+		qint64 time_end = ui.dateTimeEdit_runTrackEndTime->dateTime().toMSecsSinceEpoch();
+		qDebug() << "start_ time:" << ui.dateTimeEdit_runTrackStartTime->dateTime() 
+			     << "  end_ time:" << ui.dateTimeEdit_runTrackEndTime->dateTime();
+		qDebug() << "start time:" << time_start << "  end time:" << time_end;
+		if (time_start > time_end)
+		{
+			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("开始时间不能大于结束时间！"));
+			return;
+		}
+		ui.label_buildingMap->SetDrawTrackData(BUILDING_SHOW_TRACK, snap_recg_info, time_start, time_end);
+	}
+}
+
+//切换绘制轨迹时间选择，可以绘制全部，也可绘制一定时间段
+void MainMenu::DealDrawUserRunTrackTimeMode(int status)
+{
+	if (status == Qt::Checked)
+	{
+		ui.dateTimeEdit_runTrackStartTime->setEnabled(false);
+		ui.dateTimeEdit_runTrackEndTime->setEnabled(false);
+	}
+	else if (status == Qt::Unchecked)
+	{
+		ui.dateTimeEdit_runTrackStartTime->setEnabled(true);
+		ui.dateTimeEdit_runTrackEndTime->setEnabled(true);
+	}
+}
+
+//显示绘制轨迹可能出现的错误
+void MainMenu::DealShowErrorMsg(int msg_idx)
+{
+	if (error_camera_position_info == msg_idx)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图文件中相机信息被损坏！"));
+	}
+	else if (error_camera_position_json == msg_idx)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("地图文件信息被损坏！"));
+	}
+	else if (error_snap_recg_user_json == msg_idx)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("抓拍与识别信息被损坏！"));
+	}
+	else if (error_snap_recg_user_null == msg_idx)
+	{
+		if (ui.checkBox_openRunTrackAllTimes->isChecked())
+		{
+			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("绘制的用户记录为空！"));
+		}
+		else
+		{
+			msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("绘制的时间段内用户记录为空！"));
+		}
+	}
+	else if (error_snap_recg_track_null == msg_idx)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("用户轨迹为空，请绘制完成后再查看链式图！"));
+	}
+}
+
+//调整链式轨迹界面，紧贴主界面显示
+void MainMenu::DealAdjustLinkTrackPosition()
+{
+	ui.label_buildingMap->MoveListTrackWindow(this->x() + this->width(), this->y(), 300, this->height());
 }
 
 //更新已连接的相机map

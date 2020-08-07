@@ -166,6 +166,9 @@
     <ClCompile Include="FreeAdjustImageLabel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="ShowSnapRecgImage.cpp" />
+    <ClCompile Include="ShowUserListTrack.cpp" />
+    <ClCompile Include="ShowWarningUserList.cpp" />
     <ClCompile Include="src\facefunction\face_operation.cpp" />
     <ClCompile Include="third_lib\json\jsoncpp.cpp" />
     <ClCompile Include="UserInformationOperator.cpp" />
@@ -183,6 +186,9 @@
     <QtUic Include="DisplayUserInfoItem.ui" />
     <QtUic Include="FaceLibInfoOperator.ui" />
     <QtUic Include="MainMenu.ui" />
+    <QtUic Include="ShowSnapRecgImage.ui" />
+    <QtUic Include="ShowUserListTrack.ui" />
+    <QtUic Include="ShowWarningUserList.ui" />
     <QtUic Include="UserInformationOperator.ui" />
     <QtUic Include="VFR_system.ui" />
   </ItemGroup>
@@ -201,6 +207,9 @@
     <QtMoc Include="DisplaySnapRecognizeResult.h" />
     <QtMoc Include="FaceLibInfoOperator.h" />
     <ClInclude Include="FileOperator.h" />
+    <QtMoc Include="ShowUserListTrack.h" />
+    <QtMoc Include="ShowSnapRecgImage.h" />
+    <QtMoc Include="ShowWarningUserList.h" />
     <ClInclude Include="third_lib\json\json-forwards.h" />
     <ClInclude Include="third_lib\json\json.h" />
     <ClInclude Include="third_lib\vz_SDK\inc\VzBoxClientSDK.h" />

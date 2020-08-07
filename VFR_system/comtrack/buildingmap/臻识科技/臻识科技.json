@@ -1,0 +1,28 @@
+{"camera_info":[{
+  "camera_id":3,
+  "camera_ip":"192.168.66.10",
+  "position_name":"平台部",
+  "camera_position_x":483,
+  "camera_position_y":509
+}
+,{
+  "camera_id":4,
+  "camera_ip":"192.168.66.11",
+  "position_name":"休息区",
+  "camera_position_x":1170,
+  "camera_position_y":285
+}
+,{
+  "camera_id":2,
+  "camera_ip":"192.168.66.6",
+  "position_name":"门口闸机",
+  "camera_position_x":1521,
+  "camera_position_y":559
+}
+,{
+  "camera_id":1,
+  "camera_ip":"192.168.66.8",
+  "position_name":"走廊相机",
+  "camera_position_x":2440,
+  "camera_position_y":452
+}],"camera_name":"臻识科技","camera_num":4}
