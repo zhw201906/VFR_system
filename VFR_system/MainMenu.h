@@ -45,7 +45,7 @@
 #define   BODY_CAM_NUM        "camera_num"
 #define   BODY_CAM_ATT        "camera_attribute"
 
-
+#define   VIDEO_DEVICE_OFFLINE   "设备未连接！"
 
 
 typedef struct {
@@ -116,6 +116,7 @@ public:
     void DealModifyOneFaceLib(FaceLibInfo &face_info);
     void DeleteOneFaceLib();
 	int  QueryFaceLibTypeById(int db_id);
+	void DealDeleteOneUser(int pic_idx);
     //void DealOperatorFaceLibInfo();
 
 	//行人轨迹

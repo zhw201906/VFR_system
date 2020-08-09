@@ -7,7 +7,7 @@
 #include "comDefine.h"
 #include "comDataStruct.h"
 
-enum INFORM { ADD_CAMERA_SUCCESS, ADD_CAMERA_FAILED };
+enum INFORM { ADD_CAMERA_SUCCESS, ADD_CAMERA_FAILED, ADD_CAMERA_EXISTED };
 
 class AddCamera : public QWidget
 {

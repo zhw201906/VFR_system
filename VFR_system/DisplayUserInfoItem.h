@@ -12,7 +12,7 @@ class DisplayUserInfoItem : public QWidget
 
 public:
 	DisplayUserInfoItem(QWidget *parent = Q_NULLPTR);
-	DisplayUserInfoItem(QString userName,QImage &userImage);
+	DisplayUserInfoItem(QString userName, QImage &userImage, int idx);
 	~DisplayUserInfoItem();
 
 	void  SetDisplayItemInfo(QString userName, QImage &userImage);
@@ -20,7 +20,7 @@ public:
 
 signals:
 	void  EditUserInfoSignal();
-	void  DelUserInfoSignal();
+	void  DelUserInfoSignal(int idx);
 	void  CheckedSignal();
 	void  UncheckedSignal();
 
@@ -28,5 +28,6 @@ signals:
 private:
 	Ui::DisplayUserInfoItem ui;
 	static int object_num;
+	int pic_index;
 };
 

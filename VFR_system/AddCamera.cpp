@@ -48,7 +48,11 @@ void AddCamera::ShowMessage(INFORM msg)
     else if (msg == ADD_CAMERA_FAILED)
     {
         msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("相机连接失败，请检查后重连！"));
-    }
+	}
+	else if (msg == ADD_CAMERA_EXISTED)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("相机已连接，无需重复添加！"));
+	}
 }
 
 void AddCamera::closeEvent(QCloseEvent *event)

@@ -163,6 +163,9 @@ MainMenu::MainMenu(QWidget *parent)
 		ui.toolButton_devStatus->setEnabled(false);
 		ui.toolButton_devStatus->setIcon(QIcon("./icon/devOffline.jpg"));
 		ui.toolButton_devStatus->setText(QString::fromLocal8Bit("设备离线"));
+		ui.toolButton_warningInfo->setIcon(QIcon("./icon/warnning.jpg"));
+		ui.toolButton_warningInfo->setEnabled(false);
+		ui.toolButton_warningInfo->setText("");
 
 		ui.listWidget_nowSnap->setViewMode(QListView::IconMode);
 		ui.listWidget_nowSnap->setResizeMode(QListWidget::Adjust);
@@ -517,6 +520,8 @@ void MainMenu::DealCloseVzbox()
 	ui.toolButton_devStatus->setEnabled(false);
 	ui.toolButton_devStatus->setIcon(QIcon("./icon/devOffline.jpg"));
 	ui.toolButton_devStatus->setText(QString::fromLocal8Bit("设备离线"));
+	ui.toolButton_warningInfo->setEnabled(false);
+	ui.toolButton_warningInfo->setText("");
 }
 
 //系统全部功能初始化，在成功连接设备后执行
@@ -524,6 +529,7 @@ void MainMenu::SystemAllInit()
 {
 	if (!vzbox_online_status)
 	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
 		return;
 	}
 
@@ -791,11 +797,18 @@ void MainMenu::WarningRecordUsername(QString &name)
 	QString warn_info = QString::fromLocal8Bit("报警:\"") + name 
 		+ QString::fromLocal8Bit("\"出现!");
 	ui.toolButton_warningInfo->setText(warn_info);
+	ui.toolButton_warningInfo->setEnabled(true);
 }
 
 //处理点击报警按钮，显示报警用户列表
 void MainMenu::DealShowWarningUserList()
 {
+	if (warning_user_list.isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("报警名单为空！"));
+		return;
+	}
+
 	if (p_display_warning_list_ui == NULL)
 	{
 		p_display_warning_list_ui = new ShowWarningUserList;
@@ -1215,7 +1228,10 @@ void MainMenu::RefreshUserGroupList()
 void MainMenu::RefreshFaceLibInfoMap()
 {
 	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
 		return;
+	}
 
 	VZ_FACE_LIB_RESULT face_lib_list;
 	int ret = VzClient_SearchFaceRecgLib(vzbox_handle_, &face_lib_list);
@@ -1237,7 +1253,6 @@ void MainMenu::RefreshFaceLibInfoMap()
 		strcpy(lib_info.remark, face_lib_list.lib_items[i].remark);
 		face_lib_info_map[lib_name] = lib_info;
 	}
-	
 }
 
 //刷新显示用户信息列表
@@ -1245,6 +1260,7 @@ void MainMenu::RefreshUserInfoList()
 {
 	if (!vzbox_online_status)
 	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
 		return;
 	}
 
@@ -1378,7 +1394,9 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
             user_detail_info_map[pic_idx] = user_info;
 
 			QListWidgetItem *p_user_list_item = new QListWidgetItem(ui.listWidget_userInfoList);
-			DisplayUserInfoItem *p_user_info_item = new DisplayUserInfoItem(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), img);
+			DisplayUserInfoItem *p_user_info_item = new DisplayUserInfoItem(QString::fromLocal8Bit(cur_group_toal_user_info_.face_items[i].user_name), 
+				img, cur_group_toal_user_info_.face_items[i].pic_index);
+			connect(p_user_info_item, &DisplayUserInfoItem::DelUserInfoSignal, this, &MainMenu::DealDeleteOneUser);
 			p_user_list_item->setSizeHint(USERINFO_ITEM_SIZE);
 			ui.listWidget_userInfoList->addItem(p_user_list_item);
 			ui.listWidget_userInfoList->setItemWidget(p_user_list_item, p_user_info_item);
@@ -1397,6 +1415,12 @@ void MainMenu::DisplaynPageUserInfoList(int group_id, int page_num)
 //当前选中的人脸库,需要记录并刷新库中人员信息
 void MainMenu::CurrentSelectFaceLib(QListWidgetItem * item)
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
 	QString lib_name = item->text();
 	auto it = face_lib_info_map.find(lib_name);
 	if (it == face_lib_info_map.end())
@@ -1412,6 +1436,12 @@ void MainMenu::CurrentSelectFaceLib(QListWidgetItem * item)
 //操作一个用户信息（添加一个用户或者修改用户信息，通过传参来区分）
 void MainMenu::AddOneUserInformation()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
     if (p_operator_user_ui == NULL)
     {
         p_operator_user_ui = new UserInformationOperator(ADD_USER);
@@ -1429,6 +1459,12 @@ void MainMenu::AddOneUserInformation()
 //修改用户信息
 void MainMenu::ModifyOneUserInformation()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
     UserInfo user;
     if (p_operator_user_ui == NULL)
     {
@@ -1509,6 +1545,12 @@ void MainMenu::CleanAllUserInfoItem()
 //添加一个人脸库
 void MainMenu::AddOneFaceLibInfo()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
     if (p_operator_lib_ui == NULL)
     {
         p_operator_lib_ui = new FaceLibInfoOperator;
@@ -1561,6 +1603,12 @@ void MainMenu::DealAddOneFaceLib(FaceLibInfo & face_info)
 //修改一个人脸库
 void MainMenu::ModifyOneFaceLibInfo()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
     if (p_operator_lib_ui == NULL)
     {
         QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
@@ -1613,8 +1661,11 @@ void MainMenu::DealModifyOneFaceLib(FaceLibInfo & face_info)
 //删除选中的人脸库
 void MainMenu::DeleteOneFaceLib()
 {
-    if (!vzbox_online_status)
-        return;
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
 
     QListWidgetItem *item = ui.listWidget_userGroupList->currentItem();
     if (item->text().isEmpty())
@@ -1668,6 +1719,20 @@ int MainMenu::QueryFaceLibTypeById(int db_id)
 		++it;
 	}
 	return -1;
+}
+
+//删除一个用户
+void MainMenu::DealDeleteOneUser(int pic_idx)
+{
+	int ret = VzClient_FaceRecgUserDelete(vzbox_handle_, pic_idx);
+	if (ret != VZSDK_SUCCESS)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("删除人脸用户失败！"));
+		return;
+	}
+
+	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("删除人脸用户成功！"));
+	DisplaynPageUserInfoList(group_cur_id_, user_list_cur_page_num_);
 }
 
 //载入建筑平面图照片
@@ -2073,6 +2138,9 @@ void MainMenu::DealDrawUserRunTrackTimeMode(int status)
 	{
 		ui.dateTimeEdit_runTrackStartTime->setEnabled(true);
 		ui.dateTimeEdit_runTrackEndTime->setEnabled(true);
+		QDateTime date_time = QDateTime::currentDateTime();
+		ui.dateTimeEdit_runTrackEndTime->setDateTime(date_time);
+		ui.dateTimeEdit_runTrackStartTime->setDateTime(date_time.addDays(-1));
 	}
 }
 
@@ -2117,8 +2185,9 @@ void MainMenu::DealAdjustLinkTrackPosition()
 //更新已连接的相机map
 void MainMenu::UpdateConnectedCameraInfoMap()
 {
-	if (vzbox_handle_ == NULL)
+	if (!vzbox_online_status)
 	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
 		return;
 	}
 
@@ -2298,6 +2367,12 @@ void MainMenu::CurrentSelectCameraItem(QListWidgetItem * item)
 //添加一个相机
 void MainMenu::AddOneConnectCamera()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
     if (p_add_camera_ui == NULL)
     {
         p_add_camera_ui = new AddCamera;
@@ -2314,6 +2389,19 @@ void MainMenu::AddOneConnectCamera()
 //校验添加的相机是否存在
 void MainMenu::CheckAddCameraIsExisted(CameraAttribute & cam_param)
 {
+	auto it = connected_camera_map.find(QString(cam_param.camera_item.ip));
+	if (it != connected_camera_map.end())
+	{
+		p_add_camera_ui->ShowMessage(ADD_CAMERA_EXISTED);
+		return;
+	}
+
+	int ret = VzClient_BoxAddCam(vzbox_handle_, &cam_param.camera_item);
+	if (ret != VZSDK_SUCCESS)
+	{
+		p_add_camera_ui->ShowMessage(ADD_CAMERA_FAILED);
+		return;
+	}
 
     //假如校验成功
     p_add_camera_ui->ShowMessage(ADD_CAMERA_SUCCESS);
@@ -2350,6 +2438,7 @@ void MainMenu::ModifySelectedCamera()
 	int ret = VzClient_BoxSetCam(vzbox_handle_, it.value().channel_id, &it.value().camera_item);
 	if (ret != VZSDK_SUCCESS)
 	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("修改相机属性失败！"));
 		return;
 	}
 
@@ -2362,21 +2451,27 @@ void MainMenu::ModifySelectedCamera()
 //删除已连接的相机
 void MainMenu::DeleteSelectedCamera()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
 	auto it = connected_camera_map.find(cur_selected_camera_ip);
 	if (it == connected_camera_map.end())
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("未选中相机！"));
 		return;
 	}
-	//char *cam_ip[32] = { 0 };
-	//sprintf(cam_ip[0], "%s", cur_selected_camera_ip.toStdString().c_str());
-	//int ret = VzClient_BoxRemoveCams(vzbox_handle_, cam_ip, 1);
-	//if (ret != VZSDK_SUCCESS)
-	//{
-	//	return;
-	//}
+	const char *cam_ip = cur_selected_camera_ip.toStdString().c_str();
+	int ret = VzClient_BoxRemoveCams(vzbox_handle_, &cam_ip, 1);
+	if (ret != VZSDK_SUCCESS)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("删除相机失败！"));
+		return;
+	}
 
-	//msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("移除%1相机成功！").arg(cur_selected_camera_ip));
+	msg_box_.information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("移除%1相机成功！").arg(cur_selected_camera_ip));
 	//connected_camera_map.erase(it);
     //删除相机后刷新相机列表
 	SaveCameraConfigParamFile();

@@ -47,11 +47,11 @@ DisplayUserInfoItem::DisplayUserInfoItem(QWidget *parent)
 
 	//É¾³ý°´Å¥
 	connect(ui.toolButton_del, &QToolButton::clicked, [=]() {
-		emit DelUserInfoSignal();
+		emit DelUserInfoSignal(pic_index);
 	});
 }
 
-DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
+DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage, int idx) :pic_index(idx)
 {
 	object_num++;
 	ui.setupUi(this);
@@ -88,7 +88,7 @@ DisplayUserInfoItem::DisplayUserInfoItem(QString userName, QImage &userImage)
 
 	//É¾³ý°´Å¥
 	connect(ui.toolButton_del, &QToolButton::clicked, [=]() {
-		emit DelUserInfoSignal();
+		emit DelUserInfoSignal(pic_index);
 	});
 }
 
