@@ -49,6 +49,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="label_userName">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <spacer name="verticalSpacer_18">
         <property name="orientation">
@@ -66,6 +73,13 @@
        <widget class="QLabel" name="label_15">
         <property name="text">
          <string>性别：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label_userSex">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -89,6 +103,13 @@
         </property>
        </widget>
       </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="label_userBirthday">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="6" column="1">
        <spacer name="verticalSpacer_15">
         <property name="orientation">
@@ -109,6 +130,13 @@
         </property>
        </widget>
       </item>
+      <item row="7" column="1">
+       <widget class="QLabel" name="label_userCardId">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="8" column="1">
        <spacer name="verticalSpacer_14">
         <property name="orientation">
@@ -126,6 +154,13 @@
        <widget class="QLabel" name="label_16">
         <property name="text">
          <string>省份：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLabel" name="label_userProvices">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -152,6 +187,13 @@
         </property>
        </widget>
       </item>
+      <item row="11" column="1">
+       <widget class="QLabel" name="label_userCity">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="12" column="1">
        <spacer name="verticalSpacer_11">
         <property name="orientation">
@@ -175,7 +217,27 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="0" colspan="2">
+      <item row="13" column="1">
+       <widget class="QLabel" name="label_userAddress">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="20" column="1">
+       <spacer name="verticalSpacer_9">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>120</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="21" column="0" colspan="2">
        <widget class="QFrame" name="frame_15">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -244,65 +306,63 @@
         </layout>
        </widget>
       </item>
-      <item row="14" column="1">
-       <spacer name="verticalSpacer_9">
+      <item row="16" column="1">
+       <widget class="QLabel" name="label_libName">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0">
+       <widget class="QLabel" name="label_30">
+        <property name="text">
+         <string>库名称：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="1">
+       <spacer name="verticalSpacer_13">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>120</height>
+          <height>40</height>
          </size>
         </property>
        </spacer>
       </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_userName">
+      <item row="17" column="1">
+       <spacer name="verticalSpacer_17">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="19" column="1">
+       <widget class="QLabel" name="label_compareScore">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_userSex">
+      <item row="19" column="0">
+       <widget class="QLabel" name="label_31">
         <property name="text">
-         <string/>
+         <string>相似度：</string>
         </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="label_userBirthday">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLabel" name="label_userCardId">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QLabel" name="label_userProvices">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <widget class="QLabel" name="label_userCity">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="1">
-       <widget class="QLabel" name="label_userAddress">
-        <property name="text">
-         <string/>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>

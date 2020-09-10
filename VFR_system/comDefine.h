@@ -39,7 +39,7 @@
 #define  CAMERA_SNAP_IMAGE_NAME    "./comtrack/cacheImage/snap_face.jpg"
 #define  CAMERA_SNAP_BIG_IMAGE_NAME  "./comtrack/cacheImage/big_snap_face.jpg"
 
-#define  OPEN_SAVE_RECG_RET   1
+#define  OPEN_SAVE_RECG_RET   0
 
 //视频播放窗口点击时的状态切换
 #define  DISPLAY_LABEL_STYLE   "QLabel{border:1px solid rgb(0, 0, 0);background-color: rgb(200, 200, 200);}"

@@ -9,7 +9,7 @@ class DisplayRecgFaceImage : public QLabel
 {
     Q_OBJECT
 
-#define  SELECTED_LABEL_STYLE   "QLabel{border:1px solid rgb(255, 0, 0);}"
+#define  SELECTED_LABEL_STYLE   "QLabel{border:2px solid rgb(255, 0, 0);}"
 #define  FREE_LABEL_STYLE       "QLabel{border:2px solid rgb(0, 0, 0);}"
 
 public:

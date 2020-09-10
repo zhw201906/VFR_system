@@ -79,6 +79,31 @@ typedef struct {
 	char recg_prov[18];					// 所在省份
 }FaceRecognizeInfo;
 
+typedef struct FaceRecognizeShowInfo_{
+	char card_number[32];
+	char db_name[32];
+	char phone[16];
+	char *pic_data;
+	int  pic_len;
+	char province[32];
+	char city[16];
+	int  sex;
+	int  user_type;
+	char address[64];
+	char user_name[64];
+	char img_url[128];
+	double score;
+	QImage lib_image;
+	//FaceRecognizeShowInfo_ &operator =(const FaceRecognizeShowInfo_ &info)
+	//{
+	//	if (&info == this)
+	//	{
+	//		return *this;
+	//	}
+
+	//	return *this;
+	//}
+}FaceRecognizeShowInfo;
 
 
 #endif

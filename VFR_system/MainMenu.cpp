@@ -547,12 +547,12 @@ void MainMenu::SystemAllInit()
 	//}
 
 	//设置抓拍识别回调显示
-	int ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
-	if (ret != VZSDK_SUCCESS)
-	{
-		qDebug() << "set recognize callback falied...";
-		//return;
-	}
+	//int ret = VzLPRClient_SetFaceResultExCallBack(vzbox_handle_, &MainMenu::CameraRecognizeCallBack, (void *)this);
+	//if (ret != VZSDK_SUCCESS)
+	//{
+	//	qDebug() << "set recognize callback falied...";
+	//	//return;
+	//}
 }
 
 //刷新显示的相机列表（同时刷新在线监控和相机管理界面）
@@ -938,41 +938,12 @@ void MainMenu::CameraSnapCallBack(VzLPRClientHandle handle, TH_FaceResult * face
 			fclose(face_data);
 		}
 
-		//emit p_menu->ShowSnapItem(&face_info, &face_path);
-		//p_menu->DisplaySnapInformation(face_info, face_path);
-		//DisplaySnapResult  *p_snap_result = new DisplaySnapResult;
-		//p_snap_result->SetShowData(face_info, face_path);
-
-		//QListWidgetItem *item = new QListWidgetItem;
-		//item->setSizeHint(SNAP_ITEM_SIZE);
-		//p_menu->ui.listWidget_nowSnap->addItem(item);
-		//p_menu->ui.listWidget_nowSnap->setItemWidget(item, p_snap_result);
-		//p_menu->ui.listWidget_nowSnap->scrollToBottom();
-
-
-		//p_menu->p_snap_result_buff_ui = new DisplaySnapResult;
-		//p_menu->p_snap_result_item = new QListWidgetItem(p_menu->ui.listWidget_nowSnap);
-		//p_menu->p_snap_result_buff_ui->SetShowData(face_info, face_path);
-		//p_menu->p_snap_result_item->setSizeHint(SNAP_ITEM_SIZE);
-		//p_menu->ui.listWidget_nowSnap->addItem(p_menu->p_snap_result_item);
-		//p_menu->ui.listWidget_nowSnap->setItemWidget(p_menu->p_snap_result_item, 
-		//	                                         p_menu->p_snap_result_buff_ui);
-
-
 		p_menu->p_snap_result_buff_ui[chn_i].SetShowData(face_info, face_path);
 		p_menu->p_snap_result_item[chn_i].setSizeHint(SNAP_ITEM_SIZE);
 		p_menu->ui.listWidget_nowSnap->addItem(&p_menu->p_snap_result_item[chn_i]);
 		p_menu->ui.listWidget_nowSnap->setItemWidget(&p_menu->p_snap_result_item[chn_i], 
 			                                         &p_menu->p_snap_result_buff_ui[chn_i]);
 		p_menu->ui.listWidget_nowSnap->scrollToBottom();
-
-		//p_menu->p_snap_result_buff_ui[chn_i].SetShowData(face_info, face_path);
-		//QListWidgetItem *snap_item = new QListWidgetItem;
-		//snap_item->setSizeHint(SNAP_ITEM_SIZE);
-		//p_menu->ui.listWidget_nowSnap->addItem(snap_item);
-		//p_menu->ui.listWidget_nowSnap->setItemWidget(snap_item,
-		//	&p_menu->p_snap_result_buff_ui[chn_i]);
-		//p_menu->ui.listWidget_nowSnap->scrollToBottom();
 
 		chn_i++;
 		if (chn_i >= CAMERA_SNAP_RESULT_MAX_NUMS)
@@ -2738,7 +2709,77 @@ void MainMenu::LoadRecognizeImg()
 //人脸识别处理
 void MainMenu::DealFaceRecognize()
 {
+	if (recognizePath.isEmpty())
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片为空！"));
+		return;
+	}
+	int *app_map = new int[face_lib_info_map.size()]();
+	int idx = 0;
+	auto it = face_lib_info_map.begin();
+	while (it != face_lib_info_map.end())
+	{
+		app_map[idx++] = it.value().id;
+		++it;
+	}
 
+	QImage img(recognizePath.toLocal8Bit());
+	std::string pic_data;
+	int img_size = 0;
+	FILE *fp = fopen(recognizePath.toLocal8Bit(), "rb");
+	if (fp)
+	{
+		fseek(fp, 0, SEEK_END);
+		img_size = ftell(fp);
+		fclose(fp);
+		qDebug() << "get jpg image size...";
+	}
+
+	char *img_data = new char[img_size];
+	fp = fopen(recognizePath.toLocal8Bit(), "rb");
+	if (fp)
+	{
+		fread(img_data, sizeof(char), img_size, fp);
+		fclose(fp);
+		qDebug() << "get jpg image data...";
+	}
+	
+	qDebug() << "exec VzClient_CloudFaceRecognition ...";
+	VZ_FACE_USER_RESULT face_result;
+	int ret = VzClient_CloudFaceRecognition(vzbox_handle_, app_map, face_lib_info_map.size(),
+		img_data, img_size, 3, 1, &face_result);
+
+	delete[]img_data;
+	qDebug() << "VzClient_CloudFaceRecognition result:" << face_result.face_count << "total:" << face_result.total_count;
+
+	if (ret != VZSDK_SUCCESS)
+	{
+		qDebug() << "VzClient_CloudFaceRecognition failed...";
+		return;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		face_recognize_show_info[i].sex = face_result.face_items[i].sex;
+		face_recognize_show_info[i].score = face_result.face_items[i].score;
+		strcpy(face_recognize_show_info[i].address, face_result.face_items[i].address);
+		strcpy(face_recognize_show_info[i].card_number, face_result.face_items[i].card_number);
+		strcpy(face_recognize_show_info[i].city, face_result.face_items[i].city);
+		strcpy(face_recognize_show_info[i].db_name, face_result.face_items[i].db_name);
+		strcpy(face_recognize_show_info[i].phone, face_result.face_items[i].phone);
+		strcpy(face_recognize_show_info[i].province, face_result.face_items[i].province);
+		strcpy(face_recognize_show_info[i].user_name, face_result.face_items[i].user_name);
+
+		qDebug() << "url:" << QString::fromLocal8Bit(face_result.face_items[i].img_url);
+		QString face_recg_path = QString(CAMERA_LIBRARY_IMAGE_NAME);
+		FILE *face_data = fopen(face_recg_path.toStdString().c_str(), "wb+");
+		if (face_data)
+		{
+			fwrite(face_result.face_items[i].pic_data, sizeof(char), face_result.face_items[i].pic_len, face_data);
+			fclose(face_data);
+		}
+		face_recognize_show_info[i].lib_image.load(face_recg_path);
+	}
     ui.pushButton_viewRecognizeResult->setEnabled(true);
 }
 
@@ -2747,7 +2788,7 @@ void MainMenu::ShowFaceRecognizeResult()
 {
     if (p_display_recognize_ui == NULL)
     {
-        p_display_recognize_ui = new DisplayRecognizeResult;   //这里需要传参，识别结果数据
+        p_display_recognize_ui = new DisplayRecognizeResult(face_recognize_show_info);   //这里需要传参，识别结果数据
     }
 
     p_display_recognize_ui->show();

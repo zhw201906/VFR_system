@@ -233,7 +233,8 @@ public:
 	QVector<QString>     existed_building_map;
 	QVector<QString>     saved_person_track;
 
-
+	//QVector<FaceRecognizeShowInfo>   face_recognize_show_info;
+	FaceRecognizeShowInfo   face_recognize_show_info[3];
 
 
 	//typedef  VZ_BOX_CAM_GROUP  CameraAttribute;
