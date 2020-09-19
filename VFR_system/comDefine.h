@@ -19,6 +19,7 @@
 #include <QFont>
 #include <QPushButton>
 #include <QSet>
+#include <QMoveEvent>
 
 #define  OPEN_IMAGE_DIR          "d:/vz_box"
 //#define  OPEN_IMAGE_DIR          "d:/test_image"

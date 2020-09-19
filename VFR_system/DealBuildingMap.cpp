@@ -236,9 +236,12 @@ void DealBuildingMap::ShowListTrackWindow()
 //调整链式轨迹图界面的位置
 void DealBuildingMap::MoveListTrackWindow(int x, int y, int w, int h)
 {
-	p_list_track->setFixedSize(w, h);
-	p_list_track->move(x, y);
-	p_list_track->show();
+	if (p_list_track != NULL)
+	{
+		p_list_track->setFixedSize(w, h);
+		p_list_track->move(x, y);
+		p_list_track->show();
+	}
 }
 
 //处理高亮显示的路径

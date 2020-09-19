@@ -2840,6 +2840,12 @@ bool MainMenu::eventFilter(QObject * watched, QEvent * event)
 	return QWidget::eventFilter(watched, event);
 }
 
+//移动窗口时，同时移动链式轨迹图
+void MainMenu::moveEvent(QMoveEvent *event)
+{
+	ui.label_buildingMap->MoveListTrackWindow(event->pos().x() + width(), this->y(), 300, this->height());
+}
+
 //处理鼠标单击视频窗口
 void MainMenu::DealSingleClickedVideoLabel(int chn)
 {

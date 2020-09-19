@@ -171,6 +171,7 @@ protected:
 	void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
 	bool eventFilter(QObject *watched, QEvent *event);
+	void moveEvent(QMoveEvent *event);
 
 
 signals:
@@ -235,7 +236,6 @@ public:
 
 	//QVector<FaceRecognizeShowInfo>   face_recognize_show_info;
 	FaceRecognizeShowInfo   face_recognize_show_info[3];
-
 
 	//typedef  VZ_BOX_CAM_GROUP  CameraAttribute;
 	QMap<QString, CameraAttribute> connected_camera_map;    //记录已连接的相机IP--->attribute
