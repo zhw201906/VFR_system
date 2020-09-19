@@ -103,20 +103,30 @@
       <property name="topMargin">
        <number>0</number>
       </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
       <item>
-       <widget class="QCheckBox" name="checkBox_saveSnap">
+       <widget class="QCheckBox" name="checkBox_rect">
         <property name="text">
-         <string>保存抓拍</string>
+         <string>人脸框</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_querySnap">
+       <widget class="QCheckBox" name="checkBox_snap">
         <property name="text">
-         <string>查看抓拍</string>
+         <string>抓拍</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_saveSnap">
+        <property name="text">
+         <string>保存</string>
         </property>
        </widget>
       </item>
