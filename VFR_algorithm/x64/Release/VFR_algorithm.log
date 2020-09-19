@@ -1,0 +1,5 @@
+﻿  uic VFR_algorithm.ui
+  VFR_algorithm.cpp
+  main.cpp
+  moc_VFR_algorithm.cpp
+  VFR_algorithm.vcxproj -> D:\Project\CplusCode\VFR_system\x64\Release\VFR_algorithm.exe
