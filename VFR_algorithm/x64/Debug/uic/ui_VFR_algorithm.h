@@ -36,12 +36,10 @@ public:
     QHBoxLayout *horizontalLayout;
     QPushButton *pushButton_selectVideo;
     QPushButton *pushButton_openCamera;
-    QPushButton *pushButton_stopVideo;
     QPushButton *pushButton_cleanLog;
     QWidget *widget_2;
     QHBoxLayout *horizontalLayout_2;
     QCheckBox *checkBox_rect;
-    QCheckBox *checkBox_count;
     QCheckBox *checkBox_snap;
     QCheckBox *checkBox_saveSnap;
     QListWidget *listWidget_snap;
@@ -60,10 +58,8 @@ public:
         label_2 = new QLabel(VFR_algorithmClass);
         label_2->setObjectName(QStringLiteral("label_2"));
         QFont font;
-        font.setFamily(QString::fromUtf8("\345\215\216\346\226\207\346\245\267\344\275\223"));
+        font.setFamily(QStringLiteral("04b_21"));
         font.setPointSize(14);
-        font.setBold(true);
-        font.setWeight(75);
         label_2->setFont(font);
         label_2->setAlignment(Qt::AlignCenter);
 
@@ -99,11 +95,6 @@ public:
 
         horizontalLayout->addWidget(pushButton_openCamera);
 
-        pushButton_stopVideo = new QPushButton(widget);
-        pushButton_stopVideo->setObjectName(QStringLiteral("pushButton_stopVideo"));
-
-        horizontalLayout->addWidget(pushButton_stopVideo);
-
         pushButton_cleanLog = new QPushButton(widget);
         pushButton_cleanLog->setObjectName(QStringLiteral("pushButton_cleanLog"));
 
@@ -114,12 +105,6 @@ public:
 
         widget_2 = new QWidget(VFR_algorithmClass);
         widget_2->setObjectName(QStringLiteral("widget_2"));
-        QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(widget_2->sizePolicy().hasHeightForWidth());
-        widget_2->setSizePolicy(sizePolicy);
-        widget_2->setMinimumSize(QSize(256, 0));
         horizontalLayout_2 = new QHBoxLayout(widget_2);
         horizontalLayout_2->setSpacing(6);
         horizontalLayout_2->setContentsMargins(11, 11, 11, 11);
@@ -129,11 +114,6 @@ public:
         checkBox_rect->setObjectName(QStringLiteral("checkBox_rect"));
 
         horizontalLayout_2->addWidget(checkBox_rect);
-
-        checkBox_count = new QCheckBox(widget_2);
-        checkBox_count->setObjectName(QStringLiteral("checkBox_count"));
-
-        horizontalLayout_2->addWidget(checkBox_count);
 
         checkBox_snap = new QCheckBox(widget_2);
         checkBox_snap->setObjectName(QStringLiteral("checkBox_snap"));
@@ -166,14 +146,12 @@ public:
     void retranslateUi(QWidget *VFR_algorithmClass)
     {
         VFR_algorithmClass->setWindowTitle(QApplication::translate("VFR_algorithmClass", "\351\252\214\350\257\201Demo", Q_NULLPTR));
-        label_2->setText(QApplication::translate("VFR_algorithmClass", "\347\233\221\346\216\247--\350\241\214\344\272\272\346\212\223\346\213\215\347\256\227\346\263\225\351\252\214\350\257\201\345\271\263\345\217\260", Q_NULLPTR));
+        label_2->setText(QApplication::translate("VFR_algorithmClass", "\347\233\221\346\216\247\344\272\272\350\204\270\350\257\206\345\210\253\347\256\227\346\263\225\351\252\214\350\257\201\345\271\263\345\217\260", Q_NULLPTR));
         label_video->setText(QString());
         pushButton_selectVideo->setText(QApplication::translate("VFR_algorithmClass", "\351\200\211\346\213\251\350\247\206\351\242\221", Q_NULLPTR));
         pushButton_openCamera->setText(QApplication::translate("VFR_algorithmClass", "\345\274\200\345\220\257\346\221\204\345\203\217\345\244\264", Q_NULLPTR));
-        pushButton_stopVideo->setText(QApplication::translate("VFR_algorithmClass", "\345\201\234\346\255\242\346\222\255\346\224\276", Q_NULLPTR));
         pushButton_cleanLog->setText(QApplication::translate("VFR_algorithmClass", "\346\270\205\347\251\272\346\227\245\345\277\227", Q_NULLPTR));
         checkBox_rect->setText(QApplication::translate("VFR_algorithmClass", "\344\272\272\350\204\270\346\241\206", Q_NULLPTR));
-        checkBox_count->setText(QApplication::translate("VFR_algorithmClass", "\350\256\241\346\225\260", Q_NULLPTR));
         checkBox_snap->setText(QApplication::translate("VFR_algorithmClass", "\346\212\223\346\213\215", Q_NULLPTR));
         checkBox_saveSnap->setText(QApplication::translate("VFR_algorithmClass", "\344\277\235\345\255\230", Q_NULLPTR));
     } // retranslateUi

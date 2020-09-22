@@ -30,12 +30,14 @@
     <widget class="QLabel" name="label_2">
      <property name="font">
       <font>
-       <family>04b_21</family>
+       <family>华文楷体</family>
        <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
       </font>
      </property>
      <property name="text">
-      <string>监控人脸识别算法验证平台</string>
+      <string>监控--行人抓拍算法验证平台</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -88,6 +90,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButton_stopVideo">
+        <property name="text">
+         <string>停止播放</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButton_cleanLog">
         <property name="text">
          <string>清空日志</string>
@@ -99,6 +108,18 @@
    </item>
    <item row="2" column="1">
     <widget class="QWidget" name="widget_2" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>256</width>
+       <height>0</height>
+      </size>
+     </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <property name="topMargin">
        <number>0</number>
@@ -113,6 +134,13 @@
        <widget class="QCheckBox" name="checkBox_rect">
         <property name="text">
          <string>人脸框</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_count">
+        <property name="text">
+         <string>计数</string>
         </property>
        </widget>
       </item>

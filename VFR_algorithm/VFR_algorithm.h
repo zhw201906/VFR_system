@@ -11,11 +11,19 @@
 #include <QImage>
 #include <QTimer>
 #include <QCheckBox>
+#include <QVector>
+#include <QQueue>
+#include <QList>
+#include <QLabel>
+
+#include <thread>
+#include <mutex>
 
 #include "FaceAlgServer.h"
 
 #define   VIDEO_DIR   "../../video"
 #define   VIDEO_FRAME_RATE    30
+#define   SNAP_FACE_SHOW_SIZE  QSize(75, 80)
 
 class VFR_algorithm : public QWidget
 {
@@ -31,7 +39,10 @@ public:
 	void SlotShowRecg(int state);
 	void SlotOpenSnap(int state);
 	void SlotSaveSnap(int state);
+	void SlotAreaCount(int state);
 
+	static void DealSnapCallBack(const cv::Mat &img, void *puser);
+    static void DealFaceAlgThread();
 
 private:
     Ui::VFR_algorithmClass ui;
@@ -42,4 +53,8 @@ private:
 	bool  is_recg;
 	bool  is_snap;
 	bool  is_save;
+	bool  is_count;
+
+    char  alg_mode;
+    
 };

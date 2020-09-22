@@ -14,7 +14,7 @@ FaceAlgServer * FaceAlgServer::p_face_alg_server = NULL;
 
 FaceAlgServer::~FaceAlgServer()
 {
-	if (p_face_alg_server == NULL)
+	if (p_face_alg_server != NULL)
 	{
 		delete p_face_alg_server;
 	}
@@ -26,6 +26,8 @@ FaceAlgServer::FaceAlgServer()
 	{
 		qDebug() << "engine creat failed";
 	}
+	oper_status = OPER_NONE;
+	p_SnapFaceCallBack = NULL;
 }
 
 FaceAlgServer *FaceAlgServer::Instance()
@@ -87,9 +89,7 @@ void  FaceAlgServer::DetectFaceAndRect(cv::Mat &src, cv::Mat &dst)
 		return;
 	}
 
-	//qDebug() << "width:" << src.cols << "  height:" << src.rows;
-
-	cv::Mat mat_src = src(cv::Rect(0, 0, src.cols - src.cols % 4, src.rows)).clone();
+	cv::Mat mat_src = src(cv::Rect(0, 0, src.cols - src.cols % 4, src.rows));
 	IplImage imgTmp = mat_src;
 	IplImage *img = cvCloneImage(&imgTmp);
 
@@ -108,15 +108,93 @@ void  FaceAlgServer::DetectFaceAndRect(cv::Mat &src, cv::Mat &dst)
 	}
 
 	src.copyTo(dst);
-	for (int i = 0; i < detect_result.faceNum; i++)
+    static int person_count = 0;
+    static int person_id    = -1;
+
+
+    if (oper_status != OPER_NONE) 
+    {    
+        for (int i = 0; i < detect_result.faceNum; i++)
+    	{
+    	    int rect_x = detect_result.faceRect[i].left;
+    	    int rect_y = detect_result.faceRect[i].top;
+    	    int rect_w = detect_result.faceRect[i].right  - detect_result.faceRect[i].left;
+    	    int rect_h = detect_result.faceRect[i].bottom - detect_result.faceRect[i].top;
+
+    	    if ((oper_status & OPER_RECT) == OPER_RECT)
+    	    {
+                cv::rectangle(dst, 
+    			    cv::Rect(rect_x, rect_y, rect_w, rect_h), 
+    			    cv::Scalar(0, 255, 0), 2, 8, 0);
+    	    }
+
+            rect_x = (rect_x - SNAP_EXPAND_SIZE / 2) > 0 ? (rect_x - SNAP_EXPAND_SIZE / 2) : 0;
+            rect_y = (rect_y - SNAP_EXPAND_SIZE / 2) > 0 ? (rect_y - SNAP_EXPAND_SIZE / 2) : 0;
+            rect_w = (rect_x + rect_w + SNAP_EXPAND_SIZE) > mat_src.cols ? mat_src.cols - rect_x : rect_w + SNAP_EXPAND_SIZE;
+            rect_h = (rect_y + rect_h + SNAP_EXPAND_SIZE) > mat_src.rows ? mat_src.rows - rect_y : rect_h + SNAP_EXPAND_SIZE;
+
+            if (person_id < detect_result.faceID[i])
+            {
+                if ((oper_status & OPER_SAVE) == OPER_SAVE)
+                {
+                    AlgSaveSnapTask(mat_src, cv::Rect(rect_x, rect_y, rect_w, rect_h));
+                    person_id = detect_result.faceID[i];
+                }
+
+        		if ((oper_status & OPER_SNAP) == OPER_SNAP)
+                {
+                    AlgSnapTask(mat_src, cv::Rect(rect_x, rect_y, rect_w, rect_h));
+                    person_id = detect_result.faceID[i];
+                }
+            }
+    	}
+    }
+
+	if ((oper_status & OPER_COUNT) == OPER_COUNT)
 	{
-		cv::rectangle(dst, 
-			cv::Rect(detect_result.faceRect[i].left, detect_result.faceRect[i].top, 
-					 detect_result.faceRect[i].right- detect_result.faceRect[i].left, 
-					 detect_result.faceRect[i].bottom- detect_result.faceRect[i].top), 
-			cv::Scalar(0, 255, 0), 2, 8, 0);
+        if (detect_result.faceNum > 0)
+        {
+            person_count = max(detect_result.faceID[detect_result.faceNum - 1] + 1, person_count);
+        }
+
+        char label_text[50] = { 0 };
+		sprintf(label_text, "[%d/%d]", detect_result.faceNum, person_count);
+		std::string label(label_text);
+		cv::Point label_point(15, 30);
+		CvScalar textColor = cvScalar(0, 0, 255);
+		cv::putText(dst, label, label_point, 1, 1.5, textColor, 2);
 	}
+
+    cvReleaseImage(&img);
 }
 
+void  FaceAlgServer::SetFaceAlgMode(char state)
+{
+    oper_status = state;
+}
+
+void  FaceAlgServer::SetSnapFaceCallBack(pSnapFaceFun pfun, void *puser)
+{
+    p_SnapFaceCallBack = pfun;
+    p_context = puser;
+}
+
+void FaceAlgServer::AlgSnapTask(const cv::Mat &img, cv::Rect &rect)
+{
+    if (p_SnapFaceCallBack != NULL)
+    {
+        p_SnapFaceCallBack(img(rect), p_context);
+    }
+}
+
+void FaceAlgServer::AlgSaveSnapTask(const cv::Mat &img, cv::Rect &rect, std::string path)
+{
+    QDateTime cur_time = QDateTime::currentDateTime();
+    qint64 epoch_time  = cur_time.toMSecsSinceEpoch();
+    char img_name[100] = {0};
+    sprintf(img_name, "/%lld.jpg", (long long)epoch_time);
+    path.append(img_name);
+    cv::imwrite(path, img(rect));
+}
 
 
