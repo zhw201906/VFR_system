@@ -166,7 +166,7 @@ public:
     void retranslateUi(QWidget *VFR_algorithmClass)
     {
         VFR_algorithmClass->setWindowTitle(QApplication::translate("VFR_algorithmClass", "\351\252\214\350\257\201Demo", Q_NULLPTR));
-        label_2->setText(QApplication::translate("VFR_algorithmClass", "\347\233\221\346\216\247--\350\241\214\344\272\272\346\212\223\346\213\215\347\256\227\346\263\225\351\252\214\350\257\201\345\271\263\345\217\260", Q_NULLPTR));
+        label_2->setText(QApplication::translate("VFR_algorithmClass", "\347\233\221\346\216\247--\350\241\214\344\272\272\346\212\223\346\213\215\347\256\227\346\263\225\345\256\236\351\252\214\345\271\263\345\217\260", Q_NULLPTR));
         label_video->setText(QString());
         pushButton_selectVideo->setText(QApplication::translate("VFR_algorithmClass", "\351\200\211\346\213\251\350\247\206\351\242\221", Q_NULLPTR));
         pushButton_openCamera->setText(QApplication::translate("VFR_algorithmClass", "\345\274\200\345\220\257\346\221\204\345\203\217\345\244\264", Q_NULLPTR));

@@ -56,6 +56,15 @@ VFR_algorithm::VFR_algorithm(QWidget *parent)
 	connect(ui.checkBox_count, &QCheckBox::stateChanged, this, &VFR_algorithm::SlotAreaCount);
 	connect(ui.checkBox_saveSnap, &QCheckBox::stateChanged, this, &VFR_algorithm::SlotSaveSnap);
 	connect(&video_play_timer, &QTimer::timeout, this, &VFR_algorithm::SlotPlayVideo);
+    connect(ui.pushButton_stopVideo, &QPushButton::clicked, [=]() {
+        if (video_cap.isOpened())
+        {
+            video_cap.release();
+            video_play_timer.stop();
+            ui.label_video->clear();
+            ui.textBrowser_log->append(QString::fromLocal8Bit("ÒÑÍ£Ö¹²¥·Å..."));
+        }
+    });
     connect(ui.pushButton_cleanLog,&QPushButton::clicked,[=](){
         ui.textBrowser_log->clear();
         ui.listWidget_snap->clear();

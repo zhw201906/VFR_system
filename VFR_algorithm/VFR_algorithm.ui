@@ -37,7 +37,7 @@
       </font>
      </property>
      <property name="text">
-      <string>监控--行人抓拍算法验证平台</string>
+      <string>监控--行人抓拍算法实验平台</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

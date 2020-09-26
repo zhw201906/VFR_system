@@ -1,13 +1,4 @@
-﻿  moc VFR_algorithm.h
-  VFR_algorithm.cpp
-  main.cpp
-d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\merror.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 (编译源文件 main.cpp)
-d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\merror.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 (编译源文件 VFR_algorithm.cpp)
-c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\minwindef.h(60): warning C4005: “MAX_PATH”: 宏重定义 (编译源文件 main.cpp)
-  d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\amcomdef.h(89): note: 参见“MAX_PATH”的前一个定义 (编译源文件 main.cpp)
-c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\minwindef.h(60): warning C4005: “MAX_PATH”: 宏重定义 (编译源文件 VFR_algorithm.cpp)
-  d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\amcomdef.h(89): note: 参见“MAX_PATH”的前一个定义 (编译源文件 VFR_algorithm.cpp)
-  moc_VFR_algorithm.cpp
+﻿  FaceAlgServer.cpp
 d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\merror.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\minwindef.h(60): warning C4005: “MAX_PATH”: 宏重定义
   d:\project\cpluscode\vfr_system\vfr_algorithm\third_lib\hr_sdk\inc\amcomdef.h(89): note: 参见“MAX_PATH”的前一个定义

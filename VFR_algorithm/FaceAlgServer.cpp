@@ -63,7 +63,7 @@ bool FaceAlgServer::CreatEngineInit()
 	//初始化接口
 	/* | ASF_AGE | ASF_GENDER | ASF_FACE3DANGLE | ASF_LIVENESS | ASF_IR_LIVENESS;*/
 	MInt32 mask = ASF_FACE_DETECT | ASF_FACERECOGNITION;
-	res = ASFInitEngine(ASF_DETECT_MODE_VIDEO, ASF_OP_ALL_OUT, 16, 5, mask, &face_engine_handle);
+	res = ASFInitEngine(ASF_DETECT_MODE_VIDEO, ASF_OP_ALL_OUT, 16, 30, mask, &face_engine_handle);
 	if (res != MOK)
 	{
 		qDebug() << "ASFInitEngine fail...";

@@ -104,6 +104,14 @@
           <height>30</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <underline>false</underline>
+         </font>
+        </property>
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
        </widget>
       </item>
       <item row="0" column="3">
@@ -179,6 +187,11 @@
           <width>180</width>
           <height>30</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <underline>false</underline>
+         </font>
         </property>
        </widget>
       </item>
