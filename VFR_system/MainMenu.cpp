@@ -2709,11 +2709,19 @@ void MainMenu::LoadRecognizeImg()
 //人脸识别处理
 void MainMenu::DealFaceRecognize()
 {
+	if (!vzbox_online_status)
+	{
+		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit(VIDEO_DEVICE_OFFLINE));
+		return;
+	}
+
 	if (recognizePath.isEmpty())
 	{
 		msg_box_.critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("照片为空！"));
 		return;
 	}
+	ui.treeWidget_recognizeResult->clear();
+
 	int *app_map = new int[face_lib_info_map.size()]();
 	int idx = 0;
 	auto it = face_lib_info_map.begin();
@@ -2779,6 +2787,24 @@ void MainMenu::DealFaceRecognize()
 			fclose(face_data);
 		}
 		face_recognize_show_info[i].lib_image.load(face_recg_path);
+
+		//识别结果根节点
+		QString str = QString("%1%2%3").arg(QString::fromLocal8Bit("用户")).arg(QString::number(i + 1)).arg(QString::fromLocal8Bit("信息"));
+		QTreeWidgetItem *info_item = new QTreeWidgetItem(QStringList() << str);
+		ui.treeWidget_recognizeResult->addTopLevelItem(info_item);
+
+		QTreeWidgetItem *user_name_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("姓名") << QString::fromLocal8Bit(face_recognize_show_info[i].user_name));
+		info_item->addChild(user_name_item);
+
+		QTreeWidgetItem *db_name_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("库名称") << QString::fromLocal8Bit(face_recognize_show_info[i].db_name));
+		info_item->addChild(db_name_item);
+
+		QTreeWidgetItem *address_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("地址") << QString::fromLocal8Bit(face_recognize_show_info[i].address));
+		info_item->addChild(address_item);
+
+		QString score_str = QString("%1%").arg(QString::number(face_recognize_show_info[i].score * 100, 'f', 2));
+		QTreeWidgetItem *score_item = new QTreeWidgetItem(QStringList() << QString::fromLocal8Bit("相似度") << score_str);
+		info_item->addChild(score_item);
 	}
     ui.pushButton_viewRecognizeResult->setEnabled(true);
 }

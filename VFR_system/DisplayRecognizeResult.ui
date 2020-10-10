@@ -44,8 +44,17 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_13">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>姓名：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -71,8 +80,17 @@
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_15">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>性别：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -98,8 +116,17 @@
       </item>
       <item row="5" column="0">
        <widget class="QLabel" name="label_11">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>生日：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -152,8 +179,17 @@
       </item>
       <item row="9" column="0">
        <widget class="QLabel" name="label_16">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>省份：</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -179,6 +215,12 @@
       </item>
       <item row="11" column="0">
        <widget class="QLabel" name="label_28">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>城市：</string>
         </property>
@@ -209,6 +251,12 @@
       </item>
       <item row="13" column="0">
        <widget class="QLabel" name="label_29">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>地址：</string>
         </property>
@@ -315,6 +363,12 @@
       </item>
       <item row="16" column="0">
        <widget class="QLabel" name="label_30">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>库名称：</string>
         </property>
@@ -351,6 +405,9 @@
       </item>
       <item row="19" column="1">
        <widget class="QLabel" name="label_compareScore">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(0, 255, 0);</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -358,6 +415,12 @@
       </item>
       <item row="19" column="0">
        <widget class="QLabel" name="label_31">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>相似度：</string>
         </property>
